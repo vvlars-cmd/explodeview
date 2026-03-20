@@ -1,0 +1,2024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ExplodeView — Interactive 3D Exploded Views from CAD Files</title>
+  <meta name="description" content="Turn any STEP or CAD file into an interactive 3D exploded-view viewer embeddable on any website. Open-source, free, and production-ready." />
+  <meta property="og:title" content="ExplodeView — Interactive 3D Exploded Views from CAD Files" />
+  <meta property="og:description" content="Turn any STEP or CAD file into an interactive 3D exploded-view viewer embeddable on any website." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0a0e1a;
+      --bg-card: #0f1526;
+      --bg-elevated: #141929;
+      --border: rgba(255, 255, 255, 0.07);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --blue: #0055A4;
+      --blue-bright: #1a6fc4;
+      --blue-glow: rgba(0, 85, 164, 0.35);
+      --yellow: #FFD100;
+      --yellow-glow: rgba(255, 209, 0, 0.2);
+      --text: #e8ecf4;
+      --text-muted: #8892a4;
+      --text-dim: #4a5568;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ─── NOISE TEXTURE OVERLAY ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* ─── SCROLL REVEAL ─── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+    .reveal-delay-6 { transition-delay: 0.6s; }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 0 48px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(10, 14, 26, 0.8);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-logo-mark {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-bright) 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-logo-mark svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .nav-logo-text {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+
+    .nav-logo-text span {
+      color: var(--yellow);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color var(--transition);
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    .nav-cta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: var(--transition);
+      border: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 0 0 0 var(--blue-glow);
+    }
+
+    .btn-primary:hover {
+      background: var(--blue-bright);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 32px var(--blue-glow);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-bright);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text);
+      border-color: rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.04);
+      transform: translateY(-1px);
+    }
+
+    .btn-yellow {
+      background: var(--yellow);
+      color: #0a0e1a;
+      font-weight: 700;
+    }
+
+    .btn-yellow:hover {
+      background: #ffe033;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px var(--yellow-glow);
+    }
+
+    .btn-large {
+      padding: 16px 32px;
+      font-size: 16px;
+      border-radius: 12px;
+    }
+
+    /* ─── HERO ─── */
+    #hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 48px 80px;
+      overflow: hidden;
+    }
+
+    .hero-bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 85, 164, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 85, 164, 0.08) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    .hero-glow {
+      position: absolute;
+      width: 900px;
+      height: 600px;
+      background: radial-gradient(ellipse at center, rgba(0, 85, 164, 0.18) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .hero-glow-yellow {
+      position: absolute;
+      width: 400px;
+      height: 300px;
+      background: radial-gradient(ellipse at center, rgba(255, 209, 0, 0.06) 0%, transparent 70%);
+      top: 20%;
+      right: 15%;
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(0, 85, 164, 0.12);
+      border: 1px solid rgba(0, 85, 164, 0.3);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #4da3ff;
+      margin-bottom: 28px;
+    }
+
+    .hero-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--yellow);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.3); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 860px;
+    }
+
+    h1 {
+      font-size: clamp(40px, 6vw, 80px);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -2.5px;
+      color: var(--text);
+      margin-bottom: 24px;
+    }
+
+    h1 .accent-blue {
+      background: linear-gradient(135deg, #4da3ff 0%, #0055A4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    h1 .accent-yellow {
+      color: var(--yellow);
+    }
+
+    .hero-subtitle {
+      font-size: clamp(17px, 2vw, 21px);
+      color: var(--text-muted);
+      max-width: 580px;
+      margin: 0 auto 40px;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    .hero-cta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 72px;
+    }
+
+    .hero-stats {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 72px;
+    }
+
+    .hero-stat {
+      text-align: center;
+    }
+
+    .hero-stat-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .hero-stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .hero-stat-sep {
+      width: 1px;
+      height: 36px;
+      background: var(--border-bright);
+    }
+
+    .hero-viewer-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border-bright);
+      box-shadow:
+        0 0 0 1px rgba(0,85,164,0.15),
+        0 40px 120px rgba(0, 0, 0, 0.6),
+        0 0 80px rgba(0, 85, 164, 0.1);
+    }
+
+    .hero-viewer-bar {
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .viewer-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .viewer-url {
+      margin-left: 12px;
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: var(--text-dim);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    .hero-viewer {
+      width: 100%;
+      height: 520px;
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-viewer iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .hero-viewer-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Animated 3D cube placeholder */
+    .cube-scene {
+      width: 120px;
+      height: 120px;
+      perspective: 400px;
+    }
+
+    .cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: rotateCube 8s linear infinite;
+    }
+
+    @keyframes rotateCube {
+      from { transform: rotateX(20deg) rotateY(0deg); }
+      to { transform: rotateX(20deg) rotateY(360deg); }
+    }
+
+    .cube-face {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border: 1.5px solid rgba(0, 85, 164, 0.5);
+      background: rgba(0, 85, 164, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .face-front  { transform: rotateY(0deg) translateZ(60px); }
+    .face-back   { transform: rotateY(180deg) translateZ(60px); }
+    .face-right  { transform: rotateY(90deg) translateZ(60px); }
+    .face-left   { transform: rotateY(-90deg) translateZ(60px); }
+    .face-top    { transform: rotateX(90deg) translateZ(60px); }
+    .face-bottom { transform: rotateX(-90deg) translateZ(60px); }
+
+    /* Orbiting parts */
+    .orbit-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px dashed rgba(255, 209, 0, 0.25);
+    }
+
+    .orbit-1 {
+      width: 220px;
+      height: 220px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: spinOrbit 6s linear infinite;
+    }
+
+    .orbit-2 {
+      width: 300px;
+      height: 300px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: spinOrbit 10s linear infinite reverse;
+    }
+
+    @keyframes spinOrbit {
+      from { transform: translate(-50%, -50%) rotateZ(0deg); }
+      to { transform: translate(-50%, -50%) rotateZ(360deg); }
+    }
+
+    .orbit-dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: var(--yellow);
+      border-radius: 50%;
+      top: -5px;
+      left: calc(50% - 5px);
+      box-shadow: 0 0 12px var(--yellow);
+    }
+
+    .orbit-dot-blue {
+      background: #4da3ff;
+      box-shadow: 0 0 12px #4da3ff;
+    }
+
+    .placeholder-label {
+      font-size: 15px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .placeholder-sub {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    /* ─── SECTION COMMON ─── */
+    section {
+      position: relative;
+      z-index: 1;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 48px;
+    }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--blue-bright);
+      margin-bottom: 16px;
+    }
+
+    .section-label::before {
+      content: '';
+      width: 20px;
+      height: 2px;
+      background: var(--blue);
+      border-radius: 2px;
+    }
+
+    h2 {
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 540px;
+      line-height: 1.6;
+    }
+
+    .section-header {
+      margin-bottom: 72px;
+    }
+
+    /* ─── DIVIDER ─── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--border-bright), transparent);
+      margin: 0 48px;
+    }
+
+    /* ─── HOW IT WORKS ─── */
+    #how-it-works {
+      padding: 120px 0;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .step-card {
+      background: var(--bg-card);
+      padding: 52px 44px;
+      position: relative;
+      transition: background var(--transition);
+    }
+
+    .step-card:hover {
+      background: var(--bg-elevated);
+    }
+
+    .step-number {
+      font-size: 80px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.03);
+      position: absolute;
+      top: 20px;
+      right: 28px;
+      line-height: 1;
+      letter-spacing: -4px;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .step-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(0,85,164,0.2) 0%, rgba(0,85,164,0.08) 100%);
+      border: 1px solid rgba(0, 85, 164, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .step-icon svg {
+      width: 24px;
+      height: 24px;
+      color: #4da3ff;
+    }
+
+    .step-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+      letter-spacing: -0.3px;
+    }
+
+    .step-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    .step-connector {
+      display: none;
+    }
+
+    /* ─── FEATURES ─── */
+    #features {
+      padding: 120px 0;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 32px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+      cursor: default;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(0, 85, 164, 0.08) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(0, 85, 164, 0.35);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 85, 164, 0.1);
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 22px;
+    }
+
+    .fi-blue { background: rgba(0, 85, 164, 0.15); }
+    .fi-yellow { background: rgba(255, 209, 0, 0.12); }
+    .fi-green { background: rgba(40, 200, 120, 0.12); }
+    .fi-purple { background: rgba(130, 80, 255, 0.12); }
+    .fi-orange { background: rgba(255, 120, 40, 0.12); }
+    .fi-teal { background: rgba(40, 200, 200, 0.12); }
+
+    .feature-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+      letter-spacing: -0.2px;
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    .feature-tag {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .tag-free {
+      background: rgba(40, 200, 120, 0.12);
+      color: #4ade80;
+    }
+
+    .tag-pro {
+      background: rgba(0, 85, 164, 0.15);
+      color: #60a5fa;
+    }
+
+    /* ─── EMBED CODE ─── */
+    #embed {
+      padding: 120px 0;
+    }
+
+    .embed-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .embed-text h2 {
+      margin-bottom: 20px;
+    }
+
+    .embed-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .embed-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .embed-step-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .embed-step-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .embed-step-text strong {
+      color: var(--text);
+    }
+
+    .code-block {
+      background: #080c18;
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+    }
+
+    .code-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-block-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .code-lang-badge {
+      background: rgba(0, 85, 164, 0.2);
+      color: #60a5fa;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border-bright);
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .copy-btn:hover {
+      color: var(--text);
+      border-color: rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .copy-btn.copied {
+      color: #4ade80;
+      border-color: rgba(74, 222, 128, 0.3);
+    }
+
+    pre {
+      padding: 28px 24px;
+      overflow-x: auto;
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .token-tag { color: #f472b6; }
+    .token-attr { color: #60a5fa; }
+    .token-string { color: #86efac; }
+    .token-comment { color: #4a5568; font-style: italic; }
+    .token-script { color: #fbbf24; }
+    .token-method { color: #c4b5fd; }
+    .token-param { color: #86efac; }
+
+    /* ─── PRICING ─── */
+    #pricing {
+      padding: 120px 0;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .pricing-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px 36px;
+      position: relative;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+    }
+
+    .pricing-card.featured {
+      border-color: var(--blue);
+      background: linear-gradient(160deg, rgba(0, 85, 164, 0.1) 0%, var(--bg-card) 60%);
+      box-shadow: 0 0 0 1px rgba(0, 85, 164, 0.2), 0 24px 80px rgba(0, 85, 164, 0.1);
+    }
+
+    .pricing-card.featured:hover {
+      box-shadow: 0 0 0 1px rgba(0, 85, 164, 0.35), 0 32px 100px rgba(0, 85, 164, 0.15);
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--yellow);
+      color: #0a0e1a;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    .pricing-tier {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .pricing-price {
+      margin-bottom: 8px;
+    }
+
+    .pricing-amount {
+      font-size: 52px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -2px;
+      line-height: 1;
+    }
+
+    .pricing-amount sup {
+      font-size: 24px;
+      font-weight: 700;
+      vertical-align: super;
+      letter-spacing: 0;
+    }
+
+    .pricing-period {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+
+    .pricing-tagline {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      min-height: 40px;
+    }
+
+    .pricing-divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 28px;
+    }
+
+    .pricing-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      margin-bottom: 36px;
+      flex: 1;
+    }
+
+    .pricing-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .pricing-features li .check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(74, 222, 128, 0.12);
+      color: #4ade80;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .pricing-features li .check-blue {
+      background: rgba(0, 85, 164, 0.15);
+      color: #60a5fa;
+    }
+
+    .pricing-features li .check-yellow {
+      background: rgba(255, 209, 0, 0.12);
+      color: var(--yellow);
+    }
+
+    .btn-block {
+      display: flex;
+      justify-content: center;
+      padding: 14px;
+      font-size: 15px;
+      border-radius: 10px;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-bright);
+      color: var(--text-muted);
+      font-family: inherit;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 600;
+    }
+
+    .btn-outline:hover {
+      border-color: rgba(255,255,255,0.25);
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+    }
+
+    /* ─── WHO USES ─── */
+    #who-uses {
+      padding: 120px 0;
+    }
+
+    .who-inner {
+      text-align: center;
+    }
+
+    .who-inner h2 {
+      margin-bottom: 12px;
+    }
+
+    .who-subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 72px;
+    }
+
+    .use-cases {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 80px;
+    }
+
+    .use-case-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 32px;
+      text-align: left;
+      transition: var(--transition);
+    }
+
+    .use-case-card:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-3px);
+    }
+
+    .use-case-icon {
+      font-size: 36px;
+      margin-bottom: 18px;
+    }
+
+    .use-case-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+      letter-spacing: -0.2px;
+    }
+
+    .use-case-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .logos-label {
+      font-size: 13px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+      font-weight: 500;
+    }
+
+    .logos-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+      padding: 40px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .logo-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      opacity: 0.35;
+    }
+
+    .logo-box {
+      width: 100px;
+      height: 36px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 6px;
+    }
+
+    .logo-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.5px;
+    }
+
+    /* ─── TESTIMONIAL ─── */
+    .testimonial-strip {
+      background: linear-gradient(90deg, transparent, rgba(0, 85, 164, 0.06) 20%, rgba(0, 85, 164, 0.06) 80%, transparent);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 60px 0;
+      margin: 0 0 0 0;
+      overflow: hidden;
+    }
+
+    .testimonial-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 0 48px;
+    }
+
+    .testimonial-quote {
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.5;
+      letter-spacing: -0.3px;
+      margin-bottom: 24px;
+    }
+
+    .testimonial-quote::before,
+    .testimonial-quote::after {
+      content: '"';
+      color: var(--blue-bright);
+    }
+
+    .testimonial-author {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      padding: 80px 0 48px;
+      border-top: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-inner {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 60px;
+    }
+
+    .footer-brand .nav-logo {
+      margin-bottom: 16px;
+      display: inline-flex;
+    }
+
+    .footer-brand-desc {
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.65;
+      max-width: 260px;
+      margin-bottom: 24px;
+    }
+
+    .footer-social {
+      display: flex;
+      gap: 12px;
+    }
+
+    .social-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: var(--transition);
+      font-size: 15px;
+    }
+
+    .social-btn:hover {
+      color: var(--text);
+      border-color: var(--border-bright);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .footer-col-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.5px;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color var(--transition);
+    }
+
+    .footer-links a:hover {
+      color: var(--text-muted);
+    }
+
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-bottom-left {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .footer-bottom-left a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color var(--transition);
+    }
+
+    .footer-bottom-left a:hover {
+      color: var(--text);
+    }
+
+    .footer-bottom-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .mit-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(74, 222, 128, 0.08);
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4ade80;
+      text-decoration: none;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 960px) {
+      nav { padding: 0 24px; }
+      .nav-links { display: none; }
+      .container { padding: 0 24px; }
+      #hero { padding: 100px 24px 60px; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .embed-wrap { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .use-cases { grid-template-columns: 1fr 1fr; }
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+      .hero-viewer { height: 320px; }
+      .divider { margin: 0 24px; }
+    }
+
+    @media (max-width: 640px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .use-cases { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr; }
+      .hero-stats { gap: 24px; }
+      .hero-stat-sep { display: none; }
+      .logos-placeholder { gap: 28px; }
+    }
+
+    /* ─── ANIMATED BG BLOBS ─── */
+    .bg-blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.15;
+    }
+
+    .blob-1 {
+      width: 600px;
+      height: 600px;
+      background: var(--blue);
+      top: -200px;
+      right: -200px;
+      animation: blobFloat 20s ease-in-out infinite;
+    }
+
+    .blob-2 {
+      width: 400px;
+      height: 400px;
+      background: #8855ff;
+      bottom: 10%;
+      left: -150px;
+      animation: blobFloat 16s ease-in-out infinite reverse;
+    }
+
+    @keyframes blobFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -40px) scale(1.05); }
+      66% { transform: translate(-20px, 20px) scale(0.97); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-blob blob-1"></div>
+  <div class="bg-blob blob-2"></div>
+
+  <!-- ─── NAV ─── -->
+  <nav>
+    <a class="nav-logo" href="#">
+      <div class="nav-logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5" opacity="0.6"/>
+          <path d="M2 12l10 5 10-5" opacity="0.3"/>
+        </svg>
+      </div>
+      <span class="nav-logo-text">Explode<span>View</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#how-it-works">How it Works</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#embed">Embed</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="https://github.com/vvlars-cmd/explodeview" target="_blank" rel="noopener" class="btn btn-ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+      <a href="#pricing" class="btn btn-primary">Get Started Free</a>
+    </div>
+  </nav>
+
+  <!-- ─── HERO ─── -->
+  <section id="hero">
+    <div class="hero-bg-grid"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-glow-yellow"></div>
+
+    <div class="hero-content">
+      <div class="hero-badge reveal">
+        <span class="hero-badge-dot"></span>
+        Open-source · MIT License · No lock-in
+      </div>
+
+      <h1 class="reveal reveal-delay-1">
+        Turn any <span class="accent-blue">CAD file</span> into an<br/>
+        interactive <span class="accent-yellow">3D exploded view</span>
+      </h1>
+
+      <p class="hero-subtitle reveal reveal-delay-2">
+        Drop a STEP file in, get a fully interactive assembly viewer out. Embed on any website with two lines of HTML. Free forever.
+      </p>
+
+      <div class="hero-cta reveal reveal-delay-3">
+        <a href="#how-it-works" class="btn btn-yellow btn-large">
+          Get Started — Free
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="https://github.com/vvlars-cmd/explodeview" target="_blank" rel="noopener" class="btn btn-ghost btn-large">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          View on GitHub
+        </a>
+      </div>
+
+      <div class="hero-stats reveal reveal-delay-3">
+        <div class="hero-stat">
+          <div class="hero-stat-value">MIT</div>
+          <div class="hero-stat-label">Open Source</div>
+        </div>
+        <div class="hero-stat-sep"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">STEP/STP</div>
+          <div class="hero-stat-label">CAD Formats</div>
+        </div>
+        <div class="hero-stat-sep"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">2 lines</div>
+          <div class="hero-stat-label">To Embed</div>
+        </div>
+        <div class="hero-stat-sep"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">Zero</div>
+          <div class="hero-stat-label">Dependencies</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Viewer -->
+    <div style="position:relative;z-index:1;width:100%;max-width:960px;margin:0 auto;" class="reveal reveal-delay-4">
+      <div class="hero-viewer-wrap">
+        <div class="hero-viewer-bar">
+          <div class="viewer-dot dot-red"></div>
+          <div class="viewer-dot dot-yellow"></div>
+          <div class="viewer-dot dot-green"></div>
+          <div class="viewer-url">localhost / examples / index.html</div>
+        </div>
+        <div class="hero-viewer">
+          <!-- Attempt to embed the demo; if unavailable, show animated placeholder -->
+          <iframe
+            src="../examples/index.html"
+            title="ExplodeView Interactive Demo"
+            sandbox="allow-scripts allow-same-origin"
+            loading="lazy"
+            onerror="this.style.display='none';document.getElementById('viewer-placeholder').style.display='flex';"
+          ></iframe>
+          <div id="viewer-placeholder" class="hero-viewer-placeholder" style="display:none;position:absolute;inset:0;">
+            <div style="position:relative;width:320px;height:320px;display:flex;align-items:center;justify-content:center;">
+              <div class="orbit-ring orbit-1"><div class="orbit-dot"></div></div>
+              <div class="orbit-ring orbit-2"><div class="orbit-dot orbit-dot-blue" style="top:auto;bottom:-5px;"></div></div>
+              <div class="cube-scene">
+                <div class="cube">
+                  <div class="cube-face face-front"></div>
+                  <div class="cube-face face-back"></div>
+                  <div class="cube-face face-right"></div>
+                  <div class="cube-face face-left"></div>
+                  <div class="cube-face face-top"></div>
+                  <div class="cube-face face-bottom"></div>
+                </div>
+              </div>
+            </div>
+            <div class="placeholder-label">Interactive 3D Viewer</div>
+            <div class="placeholder-sub">Drag to rotate · Scroll to zoom · Click to explode</div>
+            <a href="../examples/index.html" class="btn btn-primary" style="margin-top:8px;">Launch Demo</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ─── HOW IT WORKS ─── -->
+  <section id="how-it-works">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">How it Works</div>
+        <h2>From CAD file to<br/>live embed in minutes</h2>
+        <p class="section-desc">No complex setup, no proprietary tools. Just a STEP file and two lines of HTML.</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card reveal reveal-delay-1">
+          <div class="step-number">01</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3"/>
+            </svg>
+          </div>
+          <div class="step-title">Process your STEP file</div>
+          <p class="step-desc">Run the ExplodeView CLI on your .stp or .step file. It parses the assembly tree, extracts geometry, and generates an optimized viewer bundle — all locally on your machine.</p>
+        </div>
+
+        <div class="step-card reveal reveal-delay-2">
+          <div class="step-number">02</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </div>
+          <div class="step-title">Add 2 lines of HTML</div>
+          <p class="step-desc">Drop the generated viewer folder into your project and add a single script tag and a container div. Works in any HTML page, React, Vue, Svelte, or vanilla JS — zero framework lock-in.</p>
+        </div>
+
+        <div class="step-card reveal reveal-delay-3">
+          <div class="step-number">03</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+            </svg>
+          </div>
+          <div class="step-title">Interactive 3D on your site</div>
+          <p class="step-desc">Your visitors get a fully interactive exploded-view with orbit controls, part highlighting, animation playback, and BOM overlay. No WebGL expertise required on your end.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ─── FEATURES ─── -->
+  <section id="features">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">Features</div>
+        <h2>Everything you need,<br/>nothing you don't</h2>
+        <p class="section-desc">A focused feature set built for real engineering documentation workflows.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon fi-blue">🔩</div>
+          <div class="feature-title">Exploded Views</div>
+          <p class="feature-desc">Animated, controllable explosions along any axis. Configurable explosion distance per part or per subassembly. Smooth easing curves.</p>
+          <span class="feature-tag tag-free">Free</span>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon fi-yellow">✦</div>
+          <div class="feature-title">Assembly Highlighting</div>
+          <p class="feature-desc">Click any part to highlight it, isolate it, or show its name and part number from the STEP assembly tree. BOM panel included.</p>
+          <span class="feature-tag tag-free">Free</span>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon fi-green">◈</div>
+          <div class="feature-title">Realistic Materials</div>
+          <p class="feature-desc">PBR material system with metal, plastic, and glass presets. Assign materials per-part with a JSON config file. Custom textures supported in Pro.</p>
+          <span class="feature-tag tag-pro">Pro</span>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-4">
+          <div class="feature-icon fi-purple">⊹</div>
+          <div class="feature-title">Full Controls</div>
+          <p class="feature-desc">Orbit, pan, zoom, sectioning plane, cross-section view, measurement tool, and first-person walkthrough mode for large assemblies.</p>
+          <span class="feature-tag tag-free">Free</span>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-5">
+          <div class="feature-icon fi-orange">◉</div>
+          <div class="feature-title">Custom Branding</div>
+          <p class="feature-desc">Replace the ExplodeView watermark with your own logo, set brand colors for the UI chrome, and configure the loading screen. Full white-label in Enterprise.</p>
+          <span class="feature-tag tag-pro">Pro</span>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-6">
+          <div class="feature-icon fi-teal">⬡</div>
+          <div class="feature-title">Responsive</div>
+          <p class="feature-desc">Adapts to any container size from 320px mobile to 4K ultrawide. Touch-optimized controls for tablets and phones. Pointer events API for custom UIs.</p>
+          <span class="feature-tag tag-free">Free</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ─── EMBED CODE ─── -->
+  <section id="embed">
+    <div class="container">
+      <div class="embed-wrap">
+        <div class="embed-text reveal">
+          <div class="section-label">Embed</div>
+          <h2>Two lines.<br/>That's it.</h2>
+          <p class="section-desc">Copy the snippet, paste into your HTML. No build step, no npm install, no configuration required.</p>
+
+          <div class="embed-steps">
+            <div class="embed-step">
+              <div class="embed-step-num">1</div>
+              <div class="embed-step-text">
+                <strong>Process your CAD file</strong> — Run <code style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:5px;font-size:13px;color:#86efac;">npx explodeview build model.step</code> in your project directory.
+              </div>
+            </div>
+            <div class="embed-step">
+              <div class="embed-step-num">2</div>
+              <div class="embed-step-text">
+                <strong>Copy the output folder</strong> — A <code style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:5px;font-size:13px;color:#86efac;">viewer/</code> directory is created next to your model file.
+              </div>
+            </div>
+            <div class="embed-step">
+              <div class="embed-step-num">3</div>
+              <div class="embed-step-text">
+                <strong>Paste the embed code</strong> — Add the two-line snippet shown here anywhere in your HTML body.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal reveal-delay-2">
+          <div class="code-block">
+            <div class="code-block-header">
+              <div class="code-block-title">
+                <span class="code-lang-badge">HTML</span>
+                embed snippet
+              </div>
+              <button class="copy-btn" id="copyBtn" onclick="copyCode()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Copy
+              </button>
+            </div>
+            <pre id="codeSnippet"><span class="token-comment">&lt;!-- 1. Load ExplodeView --&gt;</span>
+<span class="token-tag">&lt;script</span> <span class="token-attr">src</span>=<span class="token-string">"viewer/explodeview.js"</span><span class="token-tag">&gt;&lt;/script&gt;</span>
+
+<span class="token-comment">&lt;!-- 2. Place the viewer --&gt;</span>
+<span class="token-tag">&lt;div</span> <span class="token-attr">id</span>=<span class="token-string">"ev-viewer"</span>
+     <span class="token-attr">data-model</span>=<span class="token-string">"viewer/model.evx"</span>
+     <span class="token-attr">style</span>=<span class="token-string">"width:100%;height:600px"</span><span class="token-tag">&gt;&lt;/div&gt;</span></pre>
+          </div>
+
+          <!-- npm install block -->
+          <div class="code-block" style="margin-top:16px;">
+            <div class="code-block-header">
+              <div class="code-block-title">
+                <span class="code-lang-badge">SH</span>
+                install &amp; build
+              </div>
+              <button class="copy-btn" id="copyBtn2" onclick="copyCode2()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Copy
+              </button>
+            </div>
+            <pre id="codeSnippet2"><span class="token-script">npm</span> <span class="token-method">install</span> <span class="token-param">-g explodeview</span>
+<span class="token-script">explodeview</span> <span class="token-method">build</span> <span class="token-param">my-assembly.step</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ─── PRICING ─── -->
+  <section id="pricing">
+    <div class="container">
+      <div class="section-header reveal" style="text-align:center;max-width:600px;margin:0 auto 72px;">
+        <div class="section-label" style="justify-content:center;">Pricing</div>
+        <h2>Start free.<br/>Scale when you're ready.</h2>
+        <p class="section-desc" style="margin:0 auto;">The core tool is free and open-source forever. Pro tiers add cloud processing and team features.</p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Free -->
+        <div class="pricing-card reveal reveal-delay-1">
+          <div class="pricing-tier">Free</div>
+          <div class="pricing-price">
+            <span class="pricing-amount">$0</span>
+            <span class="pricing-period">forever</span>
+          </div>
+          <p class="pricing-tagline">MIT licensed. Self-hosted. Full control. No strings.</p>
+          <div class="pricing-divider"></div>
+          <ul class="pricing-features">
+            <li><span class="check">✓</span> Unlimited embeds</li>
+            <li><span class="check">✓</span> All viewer controls</li>
+            <li><span class="check">✓</span> Self-hosted processing</li>
+            <li><span class="check">✓</span> Exploded view animation</li>
+            <li><span class="check">✓</span> Part highlighting &amp; BOM</li>
+            <li><span class="check">✓</span> Community support (GitHub)</li>
+            <li><span class="check">✓</span> STEP / STP file support</li>
+          </ul>
+          <a href="https://github.com/vvlars-cmd/explodeview" target="_blank" rel="noopener" class="btn btn-outline btn-block">
+            Get Started Free
+          </a>
+        </div>
+
+        <!-- Pro -->
+        <div class="pricing-card featured reveal reveal-delay-2">
+          <div class="pricing-badge">Most Popular</div>
+          <div class="pricing-tier" style="color:#60a5fa;">Pro</div>
+          <div class="pricing-price">
+            <span class="pricing-amount"><sup>$</sup>49</span>
+            <span class="pricing-period">/ month</span>
+          </div>
+          <p class="pricing-tagline">For product teams who need cloud processing and polish.</p>
+          <div class="pricing-divider"></div>
+          <ul class="pricing-features">
+            <li><span class="check check-blue">✓</span> Everything in Free</li>
+            <li><span class="check check-blue">✓</span> Cloud processing (upload STP → embed code)</li>
+            <li><span class="check check-blue">✓</span> No ExplodeView watermark</li>
+            <li><span class="check check-blue">✓</span> Custom materials &amp; PBR textures</li>
+            <li><span class="check check-blue">✓</span> Video &amp; GIF export</li>
+            <li><span class="check check-blue">✓</span> Priority email support</li>
+            <li><span class="check check-blue">✓</span> 50 models in cloud storage</li>
+          </ul>
+          <a href="#" class="btn btn-primary btn-block" style="text-decoration:none;justify-content:center;">
+            Start Pro Trial
+          </a>
+        </div>
+
+        <!-- Enterprise -->
+        <div class="pricing-card reveal reveal-delay-3">
+          <div class="pricing-tier">Enterprise</div>
+          <div class="pricing-price">
+            <span class="pricing-amount"><sup>$</sup>299</span>
+            <span class="pricing-period">/ month</span>
+          </div>
+          <p class="pricing-tagline">For manufacturers and engineering teams at scale.</p>
+          <div class="pricing-divider"></div>
+          <ul class="pricing-features">
+            <li><span class="check check-yellow">✓</span> Everything in Pro</li>
+            <li><span class="check check-yellow">✓</span> Full white-label (your domain)</li>
+            <li><span class="check check-yellow">✓</span> REST API access</li>
+            <li><span class="check check-yellow">✓</span> Unlimited cloud models</li>
+            <li><span class="check check-yellow">✓</span> SSO / SAML integration</li>
+            <li><span class="check check-yellow">✓</span> Dedicated support engineer</li>
+            <li><span class="check check-yellow">✓</span> 99.9% uptime SLA</li>
+          </ul>
+          <a href="mailto:hello@explodeview.io" class="btn btn-outline btn-block">
+            Contact Sales
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ─── TESTIMONIAL ─── -->
+  <div class="testimonial-strip reveal">
+    <div class="testimonial-inner">
+      <p class="testimonial-quote">We replaced a $400/month CAD viewer subscription with ExplodeView in a weekend. Our customers love the interactivity.</p>
+      <div class="testimonial-author">Senior Mechanical Engineer — Industrial Robotics Startup</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ─── WHO USES ─── -->
+  <section id="who-uses">
+    <div class="container">
+      <div class="who-inner">
+        <div class="reveal">
+          <div class="section-label" style="justify-content:center;">Who Uses ExplodeView</div>
+          <h2>Built for manufacturers,<br/>loved by engineers</h2>
+          <p class="who-subtitle">From solo hardware hackers to Fortune 500 product teams.</p>
+        </div>
+
+        <div class="use-cases">
+          <div class="use-case-card reveal reveal-delay-1">
+            <div class="use-case-icon">🏭</div>
+            <div class="use-case-title">Hardware Manufacturers</div>
+            <p class="use-case-desc">Embed interactive assembly guides on product pages. Replace flat PDFs with explorable 3D documentation customers can actually use.</p>
+          </div>
+
+          <div class="use-case-card reveal reveal-delay-2">
+            <div class="use-case-icon">🔧</div>
+            <div class="use-case-title">MRO & Service Teams</div>
+            <p class="use-case-desc">Link service manuals to live 3D views. Field technicians can rotate and explode the assembly on a phone before opening a single bolt.</p>
+          </div>
+
+          <div class="use-case-card reveal reveal-delay-3">
+            <div class="use-case-icon">🎓</div>
+            <div class="use-case-title">Engineering Education</div>
+            <p class="use-case-desc">Students learn how assemblies fit together by interacting with real CAD models — not static diagrams. Perfect for mechanical engineering courses.</p>
+          </div>
+
+          <div class="use-case-card reveal reveal-delay-4">
+            <div class="use-case-icon">🛒</div>
+            <div class="use-case-title">E-Commerce & Sales</div>
+            <p class="use-case-desc">Show prospects exactly how your product is built. Interactive 3D on a product page increases conversion and reduces support tickets.</p>
+          </div>
+
+          <div class="use-case-card reveal reveal-delay-5">
+            <div class="use-case-icon">📐</div>
+            <div class="use-case-title">Design Agencies</div>
+            <p class="use-case-desc">Deliver WOW-factor client presentations with live 3D models embedded directly in web portfolios and case studies.</p>
+          </div>
+
+          <div class="use-case-card reveal reveal-delay-6">
+            <div class="use-case-icon">🚀</div>
+            <div class="use-case-title">Hardware Startups</div>
+            <p class="use-case-desc">Ship polished product documentation from day one. ExplodeView scales from your first Kickstarter page to enterprise deployment.</p>
+          </div>
+        </div>
+
+        <div class="reveal">
+          <div class="logos-label">Trusted by teams at</div>
+          <div class="logos-placeholder">
+            <div class="logo-slot"><div class="logo-box"></div><span class="logo-label">Manufacturer</span></div>
+            <div class="logo-slot"><div class="logo-box"></div><span class="logo-label">Robotics Co.</span></div>
+            <div class="logo-slot"><div class="logo-box"></div><span class="logo-label">Auto OEM</span></div>
+            <div class="logo-slot"><div class="logo-box"></div><span class="logo-label">Med Devices</span></div>
+            <div class="logo-slot"><div class="logo-box"></div><span class="logo-label">Aerospace</span></div>
+            <div class="logo-slot"><div class="logo-box"></div><span class="logo-label">IoT Startup</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ─── FOOTER ─── -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a class="nav-logo" href="#">
+            <div class="nav-logo-mark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5" opacity="0.6"/>
+                <path d="M2 12l10 5 10-5" opacity="0.3"/>
+              </svg>
+            </div>
+            <span class="nav-logo-text">Explode<span>View</span></span>
+          </a>
+          <p class="footer-brand-desc">Turn any STEP or CAD file into an interactive 3D exploded-view viewer. Open-source, MIT licensed, embeddable anywhere.</p>
+          <div class="footer-social">
+            <a href="https://github.com/vvlars-cmd/explodeview" target="_blank" rel="noopener" class="social-btn" title="GitHub">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            </a>
+            <a href="https://www.npmjs.com/package/explodeview" target="_blank" rel="noopener" class="social-btn" title="npm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0v24h24V0zm6.672 19.2H4.8V4.8h14.4v14.4h-7.2v-9.6H9.6v9.6H6.672z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Product</div>
+          <ul class="footer-links">
+            <li><a href="#how-it-works">How it Works</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#embed">Embed Code</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="../examples/index.html">Live Demo</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Developers</div>
+          <ul class="footer-links">
+            <li><a href="https://github.com/vvlars-cmd/explodeview" target="_blank" rel="noopener">GitHub Repo</a></li>
+            <li><a href="https://www.npmjs.com/package/explodeview" target="_blank" rel="noopener">npm Package</a></li>
+            <li><a href="https://github.com/vvlars-cmd/explodeview/blob/main/README.md" target="_blank" rel="noopener">Documentation</a></li>
+            <li><a href="https://github.com/vvlars-cmd/explodeview/issues" target="_blank" rel="noopener">Report Issue</a></li>
+            <li><a href="https://github.com/vvlars-cmd/explodeview/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Legal</div>
+          <ul class="footer-links">
+            <li><a href="https://github.com/vvlars-cmd/explodeview/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="footer-bottom-left">
+          &copy; 2024 ExplodeView. Built by
+          <a href="https://github.com/vvlars-cmd" target="_blank" rel="noopener">Sachin Kumar</a>,
+          creator of <a href="https://cyclewash.com" target="_blank" rel="noopener">cycleWASH</a>.
+        </div>
+        <div class="footer-bottom-right">
+          <a href="https://github.com/vvlars-cmd/explodeview/blob/main/LICENSE" target="_blank" rel="noopener" class="mit-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            MIT License
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ─── SCROLL REVEAL ───
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => {
+      revealObserver.observe(el);
+    });
+
+    // ─── IFRAME FALLBACK ───
+    const iframe = document.querySelector('.hero-viewer iframe');
+    const placeholder = document.getElementById('viewer-placeholder');
+
+    if (iframe) {
+      iframe.addEventListener('load', () => {
+        try {
+          // Try to detect blank/error iframe
+          const doc = iframe.contentDocument || iframe.contentWindow.document;
+          if (!doc || doc.title === '' && doc.body && doc.body.innerHTML.trim() === '') {
+            iframe.style.display = 'none';
+            placeholder.style.display = 'flex';
+          }
+        } catch(e) {
+          // Cross-origin, assume it loaded OK
+        }
+      });
+
+      iframe.addEventListener('error', () => {
+        iframe.style.display = 'none';
+        placeholder.style.display = 'flex';
+      });
+
+      // Timeout fallback
+      setTimeout(() => {
+        if (iframe.style.display !== 'none') {
+          try {
+            const doc = iframe.contentDocument;
+            if (!doc || !doc.body || doc.body.innerHTML.trim() === '') {
+              iframe.style.display = 'none';
+              placeholder.style.display = 'flex';
+            }
+          } catch(e) {}
+        }
+      }, 3000);
+    }
+
+    // ─── COPY CODE ───
+    function copyCode() {
+      const text = `<script src="viewer/explodeview.js"><\/script>\n<div id="ev-viewer" data-model="viewer/model.evx" style="width:100%;height:600px"></div>`;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.classList.add('copied');
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy`;
+        }, 2500);
+      });
+    }
+
+    function copyCode2() {
+      const text = `npm install -g explodeview\nexplodeview build my-assembly.step`;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyBtn2');
+        btn.classList.add('copied');
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy`;
+        }, 2500);
+      });
+    }
+
+    // ─── NAV SCROLL EFFECT ───
+    const nav = document.querySelector('nav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        nav.style.borderBottomColor = 'rgba(255,255,255,0.09)';
+      } else {
+        nav.style.borderBottomColor = 'rgba(255,255,255,0.07)';
+      }
+    }, { passive: true });
+  </script>
+</body>
+</html>
