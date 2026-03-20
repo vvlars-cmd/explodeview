@@ -167,13 +167,18 @@
     async start() {
       buildUI(this.el, this.config);
 
-      // Load Three.js from CDN
-      const THREE = await this._loadThree();
+      // Load Three.js — try import map first, then CDN
+      let THREE, OrbitControls, STLLoader;
+      try {
+        THREE = await import('three');
+        ({ OrbitControls } = await import('three/addons/controls/OrbitControls.js'));
+        ({ STLLoader } = await import('three/addons/loaders/STLLoader.js'));
+      } catch(e) {
+        THREE = await import(`${THREE_CDN}/build/three.module.js`);
+        ({ OrbitControls } = await import(`${THREE_CDN}/examples/jsm/controls/OrbitControls.js`));
+        ({ STLLoader } = await import(`${THREE_CDN}/examples/jsm/loaders/STLLoader.js`));
+      }
       this.THREE = THREE;
-
-      // Load addons
-      const { OrbitControls } = await import(`${THREE_CDN}/examples/jsm/controls/OrbitControls.js`);
-      const { STLLoader } = await import(`${THREE_CDN}/examples/jsm/loaders/STLLoader.js`);
       this.OrbitControls = OrbitControls;
       this.STLLoader = STLLoader;
 
