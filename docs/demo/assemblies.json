@@ -1,0 +1,50 @@
+[
+  {
+    "key": "BG_Metall-Teile",
+    "name": "METAL FRAME",
+    "subtitle": "Brushed Stainless Steel",
+    "detail": "Laser-cut and welded from marine-grade stainless steel for decades of outdoor durability.",
+    "color": "#D0D4DA",
+    "indices": [0, 220]
+  },
+  {
+    "key": "BG_Kunststoff",
+    "name": "PROTECTIVE COVERS",
+    "subtitle": "Matte Black ABS Polymer",
+    "detail": "Impact-resistant matte black ABS panels and ramps protecting internals.",
+    "color": "#2A2A30",
+    "indices": [220, 225]
+  },
+  {
+    "key": "Stellfuss",
+    "name": "MOUNTING SYSTEM",
+    "subtitle": "Stainless Steel Leveling Feet",
+    "detail": "Precision-adjustable stainless steel feet for perfect leveling.",
+    "color": "#B8BCC4",
+    "indices": [225, 237]
+  },
+  {
+    "key": "BG_Achse",
+    "name": "WHEEL AXLE ASSEMBLY",
+    "subtitle": "Grey Rubber & Steel",
+    "detail": "Sealed roller bearings with grey rubber guide wheels.",
+    "color": "#6E6E72",
+    "indices": [237, 278]
+  },
+  {
+    "key": "Raddreheinheit",
+    "name": "WHEEL TURNING UNIT",
+    "subtitle": "Motorized Drive System",
+    "detail": "Interroll motorized rollers, drive chains, and precision carriers.",
+    "color": "#0055A4",
+    "indices": [278, 392]
+  },
+  {
+    "key": "Oelabscheider",
+    "name": "OIL SEPARATOR",
+    "subtitle": "Metallic Blue Coated Steel",
+    "detail": "Integrated oil-water separator with powder-coated collection pan.",
+    "color": "#2277CC",
+    "indices": [392, 399]
+  }
+]

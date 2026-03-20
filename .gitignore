@@ -1,4 +1,5 @@
 node_modules/
 .DS_Store
-*.stl
-examples/*/parts/
+examples/*/parts/*.stl
+# Allow STL files in docs/demo for the live demo
+!docs/demo/parts/*.stl
