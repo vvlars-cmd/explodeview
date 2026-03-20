@@ -649,12 +649,14 @@
           brand: el.dataset.brand || '',
           productName: el.dataset.productName || '',
           assemblies: [],
-          captions: {
-            brand: el.dataset.brand || '',
-            productName: el.dataset.productName || '',
-            loaderTitle: el.dataset.loaderTitle || '',
-            loaderText: el.dataset.loaderText || undefined,
-          },
+          captions: Object.fromEntries(
+            Object.entries({
+              brand: el.dataset.brand,
+              productName: el.dataset.productName,
+              loaderTitle: el.dataset.loaderTitle,
+              loaderText: el.dataset.loaderText,
+            }).filter(([_, v]) => v !== undefined)
+          ),
         });
         await viewer.start();
       });
