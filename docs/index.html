@@ -1479,18 +1479,11 @@
           <div class="viewer-dot dot-red"></div>
           <div class="viewer-dot dot-yellow"></div>
           <div class="viewer-dot dot-green"></div>
-          <div class="viewer-url">localhost / examples / index.html</div>
+          <div class="viewer-url">explodeview.com / demo</div>
         </div>
         <div class="hero-viewer">
-          <!-- Attempt to embed the demo; if unavailable, show animated placeholder -->
-          <iframe
-            src="../examples/index.html"
-            title="ExplodeView Interactive Demo"
-            sandbox="allow-scripts allow-same-origin"
-            loading="lazy"
-            onerror="this.style.display='none';document.getElementById('viewer-placeholder').style.display='flex';"
-          ></iframe>
-          <div id="viewer-placeholder" class="hero-viewer-placeholder" style="display:none;position:absolute;inset:0;">
+          <!-- Animated placeholder demo -->
+          <div id="viewer-placeholder" class="hero-viewer-placeholder" style="position:absolute;inset:0;">
             <div style="position:relative;width:320px;height:320px;display:flex;align-items:center;justify-content:center;">
               <div class="orbit-ring orbit-1"><div class="orbit-dot"></div></div>
               <div class="orbit-ring orbit-2"><div class="orbit-dot orbit-dot-blue" style="top:auto;bottom:-5px;"></div></div>
@@ -1946,42 +1939,9 @@
       revealObserver.observe(el);
     });
 
-    // ─── IFRAME FALLBACK ───
-    const iframe = document.querySelector('.hero-viewer iframe');
+    // Placeholder always visible (live demo requires processed STL assets)
     const placeholder = document.getElementById('viewer-placeholder');
-
-    if (iframe) {
-      iframe.addEventListener('load', () => {
-        try {
-          // Try to detect blank/error iframe
-          const doc = iframe.contentDocument || iframe.contentWindow.document;
-          if (!doc || doc.title === '' && doc.body && doc.body.innerHTML.trim() === '') {
-            iframe.style.display = 'none';
-            placeholder.style.display = 'flex';
-          }
-        } catch(e) {
-          // Cross-origin, assume it loaded OK
-        }
-      });
-
-      iframe.addEventListener('error', () => {
-        iframe.style.display = 'none';
-        placeholder.style.display = 'flex';
-      });
-
-      // Timeout fallback
-      setTimeout(() => {
-        if (iframe.style.display !== 'none') {
-          try {
-            const doc = iframe.contentDocument;
-            if (!doc || !doc.body || doc.body.innerHTML.trim() === '') {
-              iframe.style.display = 'none';
-              placeholder.style.display = 'flex';
-            }
-          } catch(e) {}
-        }
-      }, 3000);
-    }
+    if (placeholder) placeholder.style.display = 'flex';
 
     // ─── COPY CODE ───
     function copyCode() {
