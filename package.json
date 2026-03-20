@@ -1,0 +1,38 @@
+{
+  "name": "explodeview",
+  "version": "0.1.0",
+  "description": "Embeddable 3D exploded-view viewer for STEP/CAD files. Turn any CAD assembly into an interactive product showcase.",
+  "main": "src/explodeview.js",
+  "types": "src/explodeview.d.ts",
+  "scripts": {
+    "dev": "npx serve examples -p 3333",
+    "build": "cp src/explodeview.js dist/explodeview.js && echo 'Built to dist/'",
+    "process": "python3 bin/explodeview-process.py"
+  },
+  "keywords": [
+    "3d-viewer",
+    "step-file",
+    "cad",
+    "exploded-view",
+    "three.js",
+    "manufacturing",
+    "product-page",
+    "embed",
+    "engineering",
+    "assembly"
+  ],
+  "author": "Sachin Kumar",
+  "license": "MIT",
+  "homepage": "https://github.com/sachin/explodeview",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sachin/explodeview.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sachin/explodeview/issues"
+  },
+  "files": [
+    "src/explodeview.js",
+    "bin/explodeview-process.py"
+  ]
+}

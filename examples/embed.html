@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ExplodeView — Embed Example</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #f5f5f7; font-family: 'Inter', sans-serif; color: #1d1d1f; }
+    .header { max-width: 960px; margin: 0 auto; padding: 48px 24px 24px; }
+    .header h1 { font-size: 2rem; font-weight: 700; }
+    .header p { color: #6e6e73; margin-top: 8px; }
+    .viewer-wrap { max-width: 960px; margin: 16px auto; padding: 0 24px; }
+    .viewer-box { width: 100%; height: 70vh; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 40px rgba(0,0,0,0.12); }
+    .code-section { max-width: 960px; margin: 40px auto; padding: 0 24px 60px; }
+    .code-section h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: 12px; }
+    pre { background: #1d1d1f; color: #f5f5f7; border-radius: 12px; padding: 20px; font-size: 0.8rem; overflow-x: auto; line-height: 1.7; }
+    .tag { color: #ff7b72; }
+    .attr { color: #79c0ff; }
+    .str { color: #a5d6ff; }
+    .cmt { color: #8b949e; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>ExplodeView</h1>
+    <p>Turn any STEP/CAD file into an interactive 3D exploded-view on your website.</p>
+  </div>
+
+  <div class="viewer-wrap">
+    <div class="viewer-box"
+         data-stp-viewer="station-basic/"
+         data-brand="cycleWASH"
+         data-product-name="Station Basic">
+    </div>
+  </div>
+
+  <div class="code-section">
+    <h2>Embed in 2 lines</h2>
+    <pre><span class="cmt">&lt;!-- 1. Container with your processed assets path --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">data-stp-viewer</span>=<span class="str">"/assets/my-product/"</span>
+     <span class="attr">data-brand</span>=<span class="str">"Your Brand"</span>
+     <span class="attr">data-product-name</span>=<span class="str">"Product Name"</span>
+     <span class="attr">style</span>=<span class="str">"width:100%; height:600px"</span><span class="tag">&gt;&lt;/div&gt;</span>
+
+<span class="cmt">&lt;!-- 2. Include the script --&gt;</span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"https://unpkg.com/explodeview"</span><span class="tag">&gt;&lt;/script&gt;</span></pre>
+  </div>
+
+  <script src="../src/explodeview.js"></script>
+</body>
+</html>
