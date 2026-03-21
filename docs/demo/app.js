@@ -1077,6 +1077,23 @@ function updateViewCube() {
   document.getElementById('ax-label-z')?.setAttribute('y', zy + 4);
 }
 
+// ─── Drop to Floor ───
+let onFloor = false;
+document.getElementById('btn-floor')?.addEventListener('click', () => {
+  onFloor = !onFloor;
+  if (onFloor) {
+    modelYOffset = -500;
+    document.getElementById('btn-floor').classList.add('active');
+    const vpos = document.getElementById('ctrl-vpos');
+    if (vpos) vpos.value = -500;
+  } else {
+    modelYOffset = 0;
+    document.getElementById('btn-floor').classList.remove('active');
+    const vpos = document.getElementById('ctrl-vpos');
+    if (vpos) vpos.value = 0;
+  }
+});
+
 // ─── Export / Screenshot ───
 document.getElementById('btn-export')?.addEventListener('click', () => {
   const panel = document.getElementById('export-panel');

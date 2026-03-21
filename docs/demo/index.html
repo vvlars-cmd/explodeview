@@ -765,6 +765,7 @@
   <div id="ce-buttons" style="position:fixed;right:14px;top:62px;z-index:55;display:flex;gap:3px;">
     <button class="vc-btn" id="btn-collapse" title="Collapse" style="font-size:0.45rem;width:auto;padding:4px 8px;">Collapse</button>
     <button class="vc-btn" id="btn-explode" title="Explode" style="font-size:0.45rem;width:auto;padding:4px 8px;">Explode</button>
+    <button class="vc-btn" id="btn-floor" title="Drop to floor" style="font-size:0.45rem;width:auto;padding:4px 8px;">&#8615; Floor</button>
     <button class="vc-btn" id="btn-export" title="Export/Screenshot" style="font-size:0.45rem;width:auto;padding:4px 8px;">&#128247; Export</button>
   </div>
 
@@ -785,12 +786,12 @@
   </div>
 
   <!-- Home button (separate, above ViewCube) -->
-  <div id="vc-home" style="position:fixed;top:90px;right:52px;cursor:pointer;z-index:56;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:5px;transition:all 0.2s;" title="Home View">
+  <div id="vc-home" style="position:fixed;top:92px;right:80px;cursor:pointer;z-index:56;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:5px;transition:all 0.2s;" title="Home View">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
   </div>
 
   <!-- ViewCube with axis lines -->
-  <div id="viewcube" style="position:fixed;top:125px;right:16px;z-index:55;width:90px;height:85px;cursor:grab;">
+  <div id="viewcube" style="position:fixed;top:130px;right:16px;z-index:55;width:90px;height:85px;cursor:grab;">
     <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:60px;height:60px;perspective:150px;">
       <div id="cube3d" style="width:60px;height:60px;position:relative;transform-style:preserve-3d;transform:rotateX(-25deg) rotateY(45deg);">
         <div class="cface" data-view="front" style="width:60px;height:60px;transform:rotateY(0deg) translateZ(30px);">FRONT</div>
@@ -812,9 +813,9 @@
   </div>
 
   <!-- Product title below nav -->
-  <div id="product-title" style="position:fixed;top:52px;left:0;right:0;text-align:center;z-index:59;padding:5px 0 4px;font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);font-weight:400;background:rgba(0,0,0,0.3);backdrop-filter:blur(8px);">
+  <div id="product-title" style="position:fixed;top:52px;left:0;right:0;text-align:center;z-index:59;padding:8px 0 6px;font-size:1.1rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.6);font-weight:400;background:rgba(0,0,0,0.3);backdrop-filter:blur(8px);">
     <span style="font-weight:200">cycleWASH</span> <span style="font-weight:700;color:#FFD100">Station Basic</span>
-    <div id="product-stats" style="font-size:0.45rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;margin-top:1px;">399 Components &bull; 6 Sub-Assemblies</div>
+    <div id="product-stats" style="font-size:0.55rem;color:rgba(255,255,255,0.35);letter-spacing:0.15em;margin-top:2px;">399 Components &bull; 6 Sub-Assemblies</div>
   </div>
 
   <!-- Bottom Controls -->
@@ -981,6 +982,6 @@
       }
     });
   </script>
-  <script type="module" src="./app.js?v=37"></script>
+  <script type="module" src="./app.js?v=38"></script>
 </body>
 </html>
