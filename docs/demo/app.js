@@ -14,37 +14,38 @@ const CONFIG = window.EXPLODEVIEW_CONFIG || {
   badge: 'Professional Bike Washing',
 };
 
-// Apply config to HTML
-document.addEventListener('DOMContentLoaded', () => {
-  // Logo
+// Apply config to ALL text elements immediately
+(function applyConfig() {
+  // Top logo — show brand + product, truncate on mobile via CSS
   const logo = document.getElementById('top-logo');
-  if (logo) logo.innerHTML = `${CONFIG.brand} <span>${CONFIG.productName}</span>`;
+  if (logo) {
+    logo.innerHTML = `<span class="logo-brand">${CONFIG.brand}</span> <span class="logo-product">${CONFIG.productName}</span>`;
+  }
 
-  // Loader title
+  // Loader
   const loaderTitle = document.getElementById('loader-title');
   if (loaderTitle) loaderTitle.innerHTML = `${CONFIG.brand}<span>${CONFIG.productName}</span>`;
+  const loaderProduct = document.querySelector('.loader-product');
+  if (loaderProduct) loaderProduct.textContent = CONFIG.productName.toUpperCase();
 
   // Hero
   const heroBadge = document.querySelector('.hero-badge');
   if (heroBadge) heroBadge.textContent = CONFIG.badge;
-
   const heroTitle = document.querySelector('.hero h1');
   if (heroTitle) heroTitle.innerHTML = `${CONFIG.brand}<span>${CONFIG.productName}</span>`;
-
   const heroModel = document.querySelector('.model-name');
   if (heroModel) heroModel.textContent = CONFIG.productName.toUpperCase();
-
   const heroTagline = document.querySelector('.tagline');
   if (heroTagline) heroTagline.textContent = CONFIG.tagline;
 
-  // Quote button label
+  // Quote button
   const quoteBtn = document.getElementById('btn-quote');
   if (quoteBtn) quoteBtn.textContent = CONFIG.quoteLabel;
 
-  // Finale title
+  // Finale
   const finaleTitle = document.querySelector('.finale h2');
-  if (finaleTitle) finaleTitle.innerHTML = `${CONFIG.brand}<span>${CONFIG.productName}</span>`;
-});
+  if (finaleTitle) finaleTitle.innerHTML = `${CONFIG.brand} <span>${CONFIG.productName}</span>`;
+})();
 
 // ─────────────────────────────────────────────
 //  ASSEMBLY DEFINITIONS
