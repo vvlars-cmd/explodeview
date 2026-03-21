@@ -126,13 +126,25 @@ homeItem.style.color = '#FFD100';
 homeItem.style.borderColor = 'rgba(255,209,0,0.15)';
 homeItem.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2" style="flex-shrink:0"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><div class="nav-label" style="font-weight:600;">Home</div>`;
 homeItem.addEventListener('click', () => {
-  activeAssembly = -1; targetDim = 0; targetExplode = 0; explodeLevel = 0;
+  activeAssembly = -1; targetDim = 0; dimAmount = 0; targetExplode = 0; explodeAmount = 0; explodeLevel = 0;
   manualMode = false; cameraLocked = false; window._isoMovedFor = null;
   controls.autoRotate = false;
   camera.position.set(3000, 1800, 3000); controls.target.set(0, 0, 0);
+  // Force reset all part colors immediately
+  for (const mesh of allParts) {
+    mesh.material.color.copy(mesh.userData.baseColor);
+    mesh.material.emissive.setHex(0x000000);
+    mesh.material.transparent = false;
+    mesh.material.opacity = 1;
+    mesh.material.metalness = mesh.userData.baseMetal;
+    mesh.material.roughness = mesh.userData.baseRough;
+  }
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   homeItem.classList.add('active');
   leftNavPanel.style.display = 'none';
+  // Hide selected info
+  const infoEl = document.getElementById('selected-asm-info');
+  if (infoEl) infoEl.style.display = 'none';
 });
 navItems.appendChild(homeItem);
 
@@ -174,12 +186,25 @@ ASSEMBLIES.forEach((asm, i) => {
     const dot = navItem.querySelector('.nav-dot');
     if (dot) dot.style.background = newColor;
     navItem.style.color = newColor;
-    // Update part base colors
+    // Update 3D highlight if this assembly is currently selected
+    if (activeAssembly === i) {
+      highlightColor.copy(asmData[i].colorObj);
+    }
+    // Update part colors immediately
+    const col3 = new THREE.Color(newColor);
     for (const mesh of asmData[i].meshes) {
       const hsl = {};
-      new THREE.Color(newColor).getHSL(hsl);
+      col3.getHSL(hsl);
       mesh.userData.baseColor = new THREE.Color().setHSL(hsl.h, hsl.s * 0.4, 0.6);
+      // If highlighted, update material directly
+      if (activeAssembly === i) {
+        mesh.material.color.copy(col3);
+        mesh.material.emissive.copy(col3).multiplyScalar(0.1);
+      }
     }
+    // Update selected info panel color
+    const selName = document.getElementById('sel-asm-name');
+    if (selName && activeAssembly === i) selName.style.color = newColor;
   });
   colorInput.addEventListener('click', (e) => e.stopPropagation());
   navItem.appendChild(colorInput);
@@ -193,6 +218,15 @@ ASSEMBLIES.forEach((asm, i) => {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     navItem.classList.add('active');
     leftNavPanel.style.display = 'none';
+    // Show selected assembly info
+    const infoEl = document.getElementById('selected-asm-info');
+    if (infoEl) {
+      infoEl.style.display = 'block';
+      document.getElementById('sel-asm-name').textContent = asm.name;
+      document.getElementById('sel-asm-name').style.color = asm.color;
+      document.getElementById('sel-asm-sub').textContent = asm.subtitle;
+      document.getElementById('sel-asm-parts').textContent = partCount + ' parts';
+    }
   });
   navItems.appendChild(navItem);
 });
@@ -1038,15 +1072,16 @@ if (vcEl) {
   document.addEventListener('mousemove', (e) => {
     if (!vcDragging) return;
     vcMoved = true;
-    const dx = (e.clientX - vcStartX) * 0.008;
-    const dy = (e.clientY - vcStartY) * 0.008;
-    // Orbit camera
-    const spherical = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
-    spherical.theta -= dx;
-    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi + dy));
-    camera.position.copy(new THREE.Vector3().setFromSpherical(spherical).add(controls.target));
+    const dx = (e.clientX - vcStartX) * 0.01;
+    const dy = (e.clientY - vcStartY) * 0.01;
+    // Rotate model (not camera) — background stays fixed
+    modelRotY += dx;
+    modelRotX += dy;
+    const sliderX = document.getElementById('ctrl-rot-x');
+    const sliderY = document.getElementById('ctrl-rot-y');
+    if (sliderX) sliderX.value = Math.round(modelRotX * 180 / Math.PI) % 360;
+    if (sliderY) sliderY.value = Math.round(modelRotY * 180 / Math.PI) % 360;
     vcStartX = e.clientX; vcStartY = e.clientY;
-    cameraLocked = true;
   });
   document.addEventListener('mouseup', () => {
     if (vcDragging) { vcDragging = false; vcEl.style.cursor = 'grab'; }

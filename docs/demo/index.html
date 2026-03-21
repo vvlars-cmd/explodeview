@@ -748,7 +748,14 @@
       <svg id="nav-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round" style="transition:transform 0.3s;"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
   </div>
-  <nav id="left-nav" style="display:flex;position:fixed;left:14px;top:170px;z-index:50;">
+  <!-- Selected assembly info (always visible below Views) -->
+  <div id="selected-asm-info" style="position:fixed;left:14px;top:168px;z-index:50;display:none;padding:8px 14px;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.06);border-radius:6px;max-width:220px;">
+    <div id="sel-asm-name" style="font-size:0.85rem;font-weight:700;letter-spacing:0.04em;"></div>
+    <div id="sel-asm-sub" style="font-size:0.55rem;color:rgba(255,255,255,0.45);margin-top:3px;line-height:1.4;"></div>
+    <div id="sel-asm-parts" style="font-size:0.45rem;color:rgba(255,255,255,0.25);margin-top:2px;"></div>
+  </div>
+
+  <nav id="left-nav" style="display:flex;position:fixed;left:14px;top:210px;z-index:50;">
     <div class="nav-items" id="nav-items"></div>
   </nav>
 
@@ -983,6 +990,6 @@
       }
     });
   </script>
-  <script type="module" src="./app.js?v=41"></script>
+  <script type="module" src="./app.js?v=42"></script>
 </body>
 </html>
