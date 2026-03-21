@@ -3,6 +3,50 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 
 // ─────────────────────────────────────────────
+//  CONFIGURATION — customize these values
+// ─────────────────────────────────────────────
+const CONFIG = window.EXPLODEVIEW_CONFIG || {
+  brand: 'cycleWASH',           // Brand name (first part of logo)
+  productName: 'Station Basic', // Product name (second part, shown bold)
+  quoteUrl: '',                 // URL for "Get a Quote" button. Empty = scroll to finale
+  quoteLabel: 'Get a Quote',    // Button label
+  tagline: 'Engineered in Germany. 399 precision components. One seamless cleaning experience.',
+  badge: 'Professional Bike Washing',
+};
+
+// Apply config to HTML
+document.addEventListener('DOMContentLoaded', () => {
+  // Logo
+  const logo = document.getElementById('top-logo');
+  if (logo) logo.innerHTML = `${CONFIG.brand} <span>${CONFIG.productName}</span>`;
+
+  // Loader title
+  const loaderTitle = document.getElementById('loader-title');
+  if (loaderTitle) loaderTitle.innerHTML = `${CONFIG.brand}<span>${CONFIG.productName}</span>`;
+
+  // Hero
+  const heroBadge = document.querySelector('.hero-badge');
+  if (heroBadge) heroBadge.textContent = CONFIG.badge;
+
+  const heroTitle = document.querySelector('.hero h1');
+  if (heroTitle) heroTitle.innerHTML = `${CONFIG.brand}<span>${CONFIG.productName}</span>`;
+
+  const heroModel = document.querySelector('.model-name');
+  if (heroModel) heroModel.textContent = CONFIG.productName.toUpperCase();
+
+  const heroTagline = document.querySelector('.tagline');
+  if (heroTagline) heroTagline.textContent = CONFIG.tagline;
+
+  // Quote button label
+  const quoteBtn = document.getElementById('btn-quote');
+  if (quoteBtn) quoteBtn.textContent = CONFIG.quoteLabel;
+
+  // Finale title
+  const finaleTitle = document.querySelector('.finale h2');
+  if (finaleTitle) finaleTitle.innerHTML = `${CONFIG.brand}<span>${CONFIG.productName}</span>`;
+});
+
+// ─────────────────────────────────────────────
 //  ASSEMBLY DEFINITIONS
 // ─────────────────────────────────────────────
 const ASSEMBLIES = [
@@ -824,8 +868,12 @@ document.getElementById('btn-explode').addEventListener('click', (e) => {
 
 document.getElementById('btn-quote').addEventListener('click', (e) => {
   e.preventDefault();
-  const finale = document.querySelector('[data-phase="finale"]');
-  if (finale) finale.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (CONFIG.quoteUrl) {
+    window.open(CONFIG.quoteUrl, '_blank');
+  } else {
+    const finale = document.querySelector('[data-phase="finale"]');
+    if (finale) finale.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
   setTopLinkActive('btn-quote');
 });
 
