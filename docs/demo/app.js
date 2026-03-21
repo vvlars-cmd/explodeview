@@ -160,6 +160,30 @@ ASSEMBLIES.forEach((asm, i) => {
     <div class="nav-dot" style="background:${asm.color}"></div>
     <div style="flex:1"><div class="nav-label">${asm.name}</div><div style="font-size:0.5rem;color:rgba(255,255,255,0.25);margin-top:2px;">${partCount} parts</div></div>
   `;
+  // Color picker for this assembly
+  const colorInput = document.createElement('input');
+  colorInput.type = 'color';
+  colorInput.value = asm.color;
+  colorInput.style.cssText = 'width:18px;height:18px;border:none;background:none;cursor:pointer;padding:0;flex-shrink:0;border-radius:3px;';
+  colorInput.title = 'Change color';
+  colorInput.addEventListener('input', (e) => {
+    const newColor = e.target.value;
+    ASSEMBLIES[i].color = newColor;
+    asmData[i].colorObj = new THREE.Color(newColor);
+    // Update dot color
+    const dot = navItem.querySelector('.nav-dot');
+    if (dot) dot.style.background = newColor;
+    navItem.style.color = newColor;
+    // Update part base colors
+    for (const mesh of asmData[i].meshes) {
+      const hsl = {};
+      new THREE.Color(newColor).getHSL(hsl);
+      mesh.userData.baseColor = new THREE.Color().setHSL(hsl.h, hsl.s * 0.4, 0.6);
+    }
+  });
+  colorInput.addEventListener('click', (e) => e.stopPropagation());
+  navItem.appendChild(colorInput);
+
   navItem.addEventListener('click', () => {
     // Trigger 3D assembly selection
     activeAssembly = i; targetExplode = 1; targetDim = 1;
