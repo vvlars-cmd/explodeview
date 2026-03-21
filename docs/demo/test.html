@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html><head>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+</head>
+<body style="margin:0;background:#111;color:lime;font:14px monospace;padding:20px">
+<div id="log"></div>
+<script type="module">
+const L = m => { document.getElementById('log').innerHTML += m + '<br>'; console.log(m); };
+try {
+  L('1. Fetching model_index.json...');
+  const ir = await fetch('./model_index.json');
+  const idx = await ir.json();
+  L('2. Index OK: ' + idx.chunks.length + ' chunks, total ' + (idx.totalSize/1024/1024).toFixed(1) + 'MB');
+
+  L('3. Loading chunk 0...');
+  const r0 = await fetch('./' + idx.chunks[0].file);
+  const b0 = await r0.arrayBuffer();
+  L('4. Chunk 0: ' + (b0.byteLength/1024/1024).toFixed(1) + 'MB');
+
+  L('5. Loading chunk 1...');
+  const r1 = await fetch('./' + idx.chunks[1].file);
+  const b1 = await r1.arrayBuffer();
+  L('6. Chunk 1: ' + (b1.byteLength/1024/1024).toFixed(1) + 'MB');
+
+  L('7. Loading chunk 2...');
+  const r2 = await fetch('./' + idx.chunks[2].file);
+  const b2 = await r2.arrayBuffer();
+  L('8. Chunk 2: ' + (b2.byteLength/1024/1024).toFixed(1) + 'MB');
+
+  L('9. Merging...');
+  const merged = new ArrayBuffer(idx.totalSize);
+  const view = new Uint8Array(merged);
+  let offset = 0;
+  for (const buf of [b0, b1, b2]) {
+    view.set(new Uint8Array(buf), offset);
+    offset += buf.byteLength;
+  }
+  L('10. Merged: ' + (merged.byteLength/1024/1024).toFixed(1) + 'MB');
+
+  L('11. Reading header...');
+  const dv = new DataView(merged);
+  const partCount = dv.getUint32(0, true);
+  L('12. Parts in binary: ' + partCount);
+
+  L('13. Importing Three...');
+  const THREE = await import('three');
+  const { STLLoader } = await import('three/addons/loaders/STLLoader.js');
+  L('14. Three OK');
+
+  const parser = new STLLoader();
+  const headerSize = 4;
+
+  // Parse first 5 parts
+  for (let i = 0; i < Math.min(5, partCount); i++) {
+    const off = dv.getUint32(headerSize + i * 8, true);
+    const len = dv.getUint32(headerSize + i * 8 + 4, true);
+    L('  Part ' + i + ': offset=' + off + ' len=' + len);
+    if (len > 100) {
+      const geo = parser.parse(merged.slice(off, off + len));
+      L('  -> parsed OK, vertices: ' + geo.attributes.position.count);
+    }
+  }
+  L('DONE - chunk loading works!');
+} catch(e) {
+  L('ERROR: ' + e.message);
+  L(e.stack);
+}
+</script></body></html>
