@@ -110,12 +110,12 @@ const ASSEMBLIES = [
 const sectionsContainer = document.getElementById('assembly-sections');
 const navItems = document.getElementById('nav-items');
 
-// Add Home item to nav
+// Add Home item to nav dropdown
 const homeItem = document.createElement('div');
 homeItem.className = 'nav-item';
 homeItem.style.color = '#FFD100';
 homeItem.style.borderColor = 'rgba(255,209,0,0.15)';
-homeItem.innerHTML = `<div class="nav-dot" style="background:#FFD100"></div><div class="nav-label" style="font-weight:600;">VIEWS</div>`;
+homeItem.innerHTML = `<div class="nav-dot" style="background:#FFD100"></div><div class="nav-label" style="font-weight:600;">Home</div>`;
 homeItem.addEventListener('click', () => {
   activeAssembly = -1; targetDim = 0; targetExplode = 0; explodeLevel = 0;
   manualMode = false; cameraLocked = false; window._isoMovedFor = null;
