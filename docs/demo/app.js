@@ -843,7 +843,7 @@ document.getElementById('btn-stop-rotate').addEventListener('click', () => {
   restoreScrollLayer();
 });
 // btn-free-rotate removed
-document.getElementById('btn-reset-view').addEventListener('click', () => {
+document.getElementById('btn-reset-view')?.addEventListener('click', () => {
   camera.position.set(3000, 1800, 3000);
   controls.target.set(0, 0, 0);
   camTargetPos.set(3000, 1800, 3000);
@@ -1100,6 +1100,18 @@ function updateViewCube() {
   document.getElementById('ax-label-z')?.setAttribute('x', zx - 10);
   document.getElementById('ax-label-z')?.setAttribute('y', zy + 4);
 }
+
+// ─── Flip 90° buttons ───
+document.getElementById('btn-flip-x')?.addEventListener('click', () => {
+  modelRotX += Math.PI / 2;
+  const slider = document.getElementById('ctrl-rot-x');
+  if (slider) slider.value = Math.round(modelRotX * 180 / Math.PI) % 360;
+});
+document.getElementById('btn-flip-z')?.addEventListener('click', () => {
+  modelRotZ += Math.PI / 2;
+  const slider = document.getElementById('ctrl-rot-z');
+  if (slider) slider.value = Math.round(modelRotZ * 180 / Math.PI) % 360;
+});
 
 // ─── Drop to Floor ───
 let onFloor = false;
