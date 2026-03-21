@@ -154,37 +154,45 @@
     const fill = document.getElementById('fill');
     const ltxt = document.getElementById('ltxt');
 
-    const batch = 25;
-    for(let i=0;i<manifest.length;i+=batch){
-      const b = manifest.slice(i,i+batch);
-      await Promise.all(b.map((p,bi)=>new Promise(r=>{
-        const idx=i+bi;
-        stl.load('./parts/'+p.file, geo=>{
+    // Load parts one at a time — no await blocking, fire-and-forget
+    let loadQueue = [...manifest];
+    let loading = 0;
+    const maxConcurrent = 6;
+
+    function loadNext() {
+      while (loading < maxConcurrent && loadQueue.length > 0) {
+        const p = loadQueue.shift();
+        const idx = manifest.indexOf(p);
+        loading++;
+        stl.load('./parts/' + p.file, geo => {
           geo.computeVertexNormals();
-          const ai=partAsm[idx];
-          const col = ai>=0 ? new THREE.Color(ASMS[ai].color) : new THREE.Color(0xb0b8c4);
-          const hsl={}; col.getHSL(hsl);
-          const bc = new THREE.Color().setHSL(hsl.h, hsl.s*0.4, 0.6);
-          const mat = new THREE.MeshStandardMaterial({color:bc, metalness:0.45, roughness:0.35, side:THREE.DoubleSide});
+          const ai = partAsm[idx];
+          const col = ai >= 0 ? new THREE.Color(ASMS[ai].color) : new THREE.Color(0xb0b8c4);
+          const hsl = {}; col.getHSL(hsl);
+          const bc = new THREE.Color().setHSL(hsl.h, hsl.s * 0.4, 0.6);
+          const mat = new THREE.MeshStandardMaterial({ color: bc, metalness: 0.45, roughness: 0.35, side: THREE.DoubleSide });
           const mesh = new THREE.Mesh(geo, mat);
-          mesh.castShadow=true; mesh.receiveShadow=true;
-          const oc = new THREE.Vector3(p.center[0]-mc.x, p.center[2]-mc.z, -(p.center[1]-mc.y));
+          mesh.castShadow = true; mesh.receiveShadow = true;
+          const oc = new THREE.Vector3(p.center[0] - mc.x, p.center[2] - mc.z, -(p.center[1] - mc.y));
           geo.translate(-mc.x, -mc.z, mc.y);
-          const dir=oc.clone(); if(dir.length()<1)dir.set(0,1,0); dir.normalize();
-          const vol=p.bbox[0]*p.bbox[1]*p.bbox[2];
-          let dist; if(vol>50000000)dist=250+Math.random()*120; else if(vol>1000000)dist=400+Math.random()*300; else dist=600+Math.random()*500;
-          mesh.userData={idx,asmIdx:ai,explodeDir:dir,explodeDist:dist,origCenter:oc,baseColor:bc.clone(),baseMetal:0.45,baseRough:0.35,_ce:0};
+          const dir = oc.clone(); if (dir.length() < 1) dir.set(0, 1, 0); dir.normalize();
+          const vol = p.bbox[0] * p.bbox[1] * p.bbox[2];
+          let dist; if (vol > 50000000) dist = 250 + Math.random() * 120; else if (vol > 1000000) dist = 400 + Math.random() * 300; else dist = 600 + Math.random() * 500;
+          mesh.userData = { idx, asmIdx: ai, explodeDir: dir, explodeDist: dist, origCenter: oc, baseColor: bc.clone(), baseMetal: 0.45, baseRough: 0.35, _ce: 0 };
           scene.add(mesh); allParts.push(mesh);
-          if(ai>=0) asmData[ai].meshes.push(mesh);
-          loaded++; fill.style.width=(loaded/manifest.length*100)+'%'; ltxt.textContent=loaded+' / '+manifest.length;
-          r();
-        }, undefined, ()=>{loaded++;r();});
-      })));
+          if (ai >= 0) asmData[ai].meshes.push(mesh);
+          loaded++; loading--;
+          fill.style.width = (loaded / manifest.length * 100) + '%';
+          ltxt.textContent = loaded + ' / ' + manifest.length;
+          if (loaded === manifest.length) {
+            for (const ad of asmData) { if (!ad.meshes.length) continue; const c = new THREE.Vector3(); for (const m of ad.meshes) c.add(m.userData.origCenter); c.divideScalar(ad.meshes.length); ad.center.copy(c); }
+            setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
+          }
+          loadNext();
+        }, undefined, () => { loaded++; loading--; loadNext(); });
+      }
     }
-
-    for(const ad of asmData){if(!ad.meshes.length)continue;const c=new THREE.Vector3();for(const m of ad.meshes)c.add(m.userData.origCenter);c.divideScalar(ad.meshes.length);ad.center.copy(c);}
-
-    setTimeout(()=>document.getElementById('loader').classList.add('hidden'),500);
+    loadNext();
 
     // Left nav
     const leftnav = document.getElementById('leftnav');

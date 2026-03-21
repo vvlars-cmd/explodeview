@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+</head>
+<body style="margin:0;background:#111">
+<div id="s" style="color:#fff;font-family:monospace;padding:20px"></div>
+<script type="module">
+const log = m => { document.getElementById('s').innerHTML += m + '<br>'; console.log(m); };
+try {
+  log('1. Importing THREE...');
+  const THREE = await import('three');
+  log('2. THREE loaded: ' + Object.keys(THREE).length + ' exports');
+
+  log('3. Importing STLLoader...');
+  const { STLLoader } = await import('three/addons/loaders/STLLoader.js');
+  log('4. STLLoader loaded: ' + typeof STLLoader);
+
+  log('5. Creating scene...');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 1, 5000);
+  camera.position.set(1000,1000,1000);
+  const renderer = new THREE.WebGLRenderer();
+  renderer.setSize(innerWidth, innerHeight);
+  document.body.appendChild(renderer.domElement);
+  scene.add(new THREE.AmbientLight(0xffffff, 2));
+  log('6. Scene created');
+
+  log('7. Loading manifest...');
+  const res = await fetch('./manifest.json');
+  const manifest = await res.json();
+  log('8. Manifest: ' + manifest.length + ' parts');
+
+  log('9. Loading first STL...');
+  const loader = new STLLoader();
+  loader.load('./parts/' + manifest[0].file, geo => {
+    log('10. STL loaded! Faces: ' + (geo.attributes.position.count/3));
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:0x44aaff}));
+    scene.add(mesh);
+    camera.lookAt(0,0,0);
+    renderer.render(scene, camera);
+    log('11. RENDERED OK');
+  }, undefined, err => {
+    log('ERROR loading STL: ' + err);
+  });
+} catch(e) {
+  log('ERROR: ' + e.message);
+  log('Stack: ' + e.stack);
+}
+</script>
+</body>
+</html>
