@@ -301,105 +301,7 @@ renderer.domElement.addEventListener('pointerup', () => {
 // ─────────────────────────────────────────────
 //  AUDIO ENGINE
 // ─────────────────────────────────────────────
-class Audio {
-  constructor() { this.ctx = null; this.muted = false; }
-  init() {
-    if (this.ctx) return;
-    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  _gain(vol) {
-    if (!this.ctx || this.muted) return null;
-    const g = this.ctx.createGain();
-    g.gain.value = vol;
-    g.connect(this.ctx.destination);
-    return g;
-  }
-  whoosh() {
-    const g = this._gain(0.1); if (!g) return;
-    const now = this.ctx.currentTime;
-    const o = this.ctx.createOscillator();
-    const f = this.ctx.createBiquadFilter();
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(250, now);
-    o.frequency.exponentialRampToValueAtTime(50, now + 0.6);
-    f.type = 'lowpass'; f.frequency.setValueAtTime(2000, now);
-    f.frequency.exponentialRampToValueAtTime(150, now + 0.6);
-    g.gain.setValueAtTime(0.1, now);
-    g.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-    o.connect(f).connect(g);
-    o.start(now); o.stop(now + 0.7);
-  }
-  impact() {
-    const g = this._gain(0.15); if (!g) return;
-    const now = this.ctx.currentTime;
-    const o = this.ctx.createOscillator();
-    o.type = 'sine';
-    o.frequency.setValueAtTime(80, now);
-    o.frequency.exponentialRampToValueAtTime(25, now + 0.3);
-    g.gain.setValueAtTime(0.15, now);
-    g.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-    o.connect(g); o.start(now); o.stop(now + 0.35);
-  }
-  shimmer(baseFreq = 700) {
-    if (!this.ctx || this.muted) return;
-    const now = this.ctx.currentTime;
-    for (let i = 0; i < 4; i++) {
-      const g = this.ctx.createGain();
-      g.gain.setValueAtTime(0.02, now + i*0.04);
-      g.gain.linearRampToValueAtTime(0.04, now + 0.15 + i*0.04);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
-      g.connect(this.ctx.destination);
-      const o = this.ctx.createOscillator();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(baseFreq + i*180, now);
-      o.frequency.linearRampToValueAtTime(baseFreq*1.4 + i*250, now + 0.7);
-      o.connect(g); o.start(now + i*0.04); o.stop(now + 0.8);
-    }
-  }
-  sweep(up = true) {
-    const g = this._gain(0.06); if (!g) return;
-    const now = this.ctx.currentTime;
-    const o = this.ctx.createOscillator();
-    o.type = 'triangle';
-    if (up) { o.frequency.setValueAtTime(80, now); o.frequency.exponentialRampToValueAtTime(600, now + 0.35); }
-    else { o.frequency.setValueAtTime(600, now); o.frequency.exponentialRampToValueAtTime(80, now + 0.35); }
-    g.gain.setValueAtTime(0.06, now);
-    g.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-    o.connect(g); o.start(now); o.stop(now + 0.45);
-  }
-  drone() {
-    if (!this.ctx || this._droneStarted) return;
-    this._droneStarted = true;
-    const now = this.ctx.currentTime;
-    [55, 82.5, 110].forEach(freq => {
-      const o = this.ctx.createOscillator();
-      const g = this.ctx.createGain();
-      const f = this.ctx.createBiquadFilter();
-      o.type = 'sine'; o.frequency.value = freq;
-      f.type = 'lowpass'; f.frequency.value = 300;
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(0.02, now + 3);
-      o.connect(f).connect(g).connect(this.ctx.destination);
-      o.start(now);
-    });
-  }
-}
-const audio = new Audio();
-
-// Sound button
-const soundBtn = document.getElementById('sound-btn');
-soundBtn.addEventListener('click', () => {
-  audio.init(); audio.drone();
-  audio.muted = !audio.muted;
-  soundBtn.classList.toggle('on', !audio.muted);
-  soundBtn.textContent = audio.muted ? '🔇' : '♪';
-});
-
-// Init audio on any click
-document.addEventListener('click', () => {
-  audio.init(); audio.drone();
-  if (!audio.muted) { soundBtn.classList.add('on'); soundBtn.textContent = '♪'; }
-}, { once: true });
+// Audio removed — no sound
 
 // ─────────────────────────────────────────────
 //  LOAD MODEL
@@ -610,7 +512,7 @@ function updateScrollState() {
     camTargetLook.set(0, 0, 0);
 
     if (progress > 0.3 && progress < 0.35 && targetExplode > 0.2) {
-      audio.whoosh();
+      
     }
   }
 
@@ -649,8 +551,8 @@ function updateScrollState() {
       // Sound on assembly change
       if (lastActiveAssembly !== i) {
         lastActiveAssembly = i;
-        audio.shimmer(500 + i * 100);
-        audio.sweep(true);
+        
+        
       }
     } else {
       const textEl = document.getElementById(`asm-text-${i}`);
@@ -676,7 +578,7 @@ function updateScrollState() {
       camTargetLook.set(0, 0, 0);
 
       if (progress > 0.3 && progress < 0.35) {
-        audio.impact();
+        
       }
     }
   }
