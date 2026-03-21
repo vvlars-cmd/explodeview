@@ -1041,6 +1041,16 @@ function updateBottomControls() {
 }
 window.addEventListener('scroll', updateBottomControls, { passive: true });
 
+// ─── Wireframe Toggle ───
+let wireframeOn = false;
+document.getElementById('btn-wireframe').addEventListener('click', () => {
+  wireframeOn = !wireframeOn;
+  document.getElementById('btn-wireframe').classList.toggle('active', wireframeOn);
+  for (const mesh of allParts) {
+    mesh.material.wireframe = wireframeOn;
+  }
+});
+
 // ─── Settings Panel ───
 document.getElementById('btn-settings').addEventListener('click', () => {
   const panel = document.getElementById('settings-panel');
