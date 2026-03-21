@@ -286,10 +286,17 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.target.set(0, 0, 0);
 controls.enabled = true;
-controls.autoRotate = true;
+controls.autoRotate = false;
 controls.autoRotateSpeed = 0.4;
 controls.minDistance = 800;
 controls.maxDistance = 5500;
+
+// Lock camera when user starts dragging so auto-updates don't fight
+renderer.domElement.addEventListener('pointerdown', () => { cameraLocked = true; });
+renderer.domElement.addEventListener('pointerup', () => {
+  // Keep locked unless auto-rotate is on
+  if (controls.autoRotate) cameraLocked = false;
+});
 
 // ─────────────────────────────────────────────
 //  AUDIO ENGINE
@@ -565,6 +572,7 @@ let highlightColor = new THREE.Color(0x0055A4);
 let camTargetPos = new THREE.Vector3(3000, 1800, 3000);
 let camTargetLook = new THREE.Vector3(0, 0, 0);
 let lastActiveAssembly = -1;
+let cameraLocked = false; // when true, camera position is not auto-updated
 
 function updateScrollState() {
   // Skip scroll-driven updates when user clicked Collapse/Explode
@@ -792,7 +800,7 @@ function animate() {
       window._isoFrames = 0;
     }
     // Lerp to isometric for first 60 frames (~1 sec), then let user rotate freely
-    if (window._isoFrames < 60) {
+    if (window._isoFrames < 60 && !cameraLocked) {
       window._isoFrames++;
       const ac2 = asmData[activeAssembly].center;
       const isoDist = 2500;
@@ -808,8 +816,8 @@ function animate() {
     spot.intensity = lerp(spot.intensity, 0, delta * 3);
   }
 
-  // Camera smooth follow — only when auto-rotating, not when user is dragging
-  if (controls.autoRotate) {
+  // Camera smooth follow — only when not user-controlled
+  if (!cameraLocked && controls.autoRotate) {
     camera.position.lerp(camTargetPos, delta * 1.5);
     controls.target.lerp(camTargetLook, delta * 1.5);
   }
@@ -881,12 +889,14 @@ document.getElementById('btn-auto-rotate').addEventListener('click', () => {
   controls.autoRotate = true;
   controls.autoRotateSpeed = 0.4;
   window._userForcedRotate = true;
+  cameraLocked = false;
   setRotateActive('btn-auto-rotate');
   restoreScrollLayer();
 });
 document.getElementById('btn-stop-rotate').addEventListener('click', () => {
   controls.autoRotate = false;
   window._userForcedRotate = false;
+  cameraLocked = true;
   setRotateActive('btn-stop-rotate');
   restoreScrollLayer();
 });
@@ -899,11 +909,22 @@ document.getElementById('btn-free-rotate').addEventListener('click', () => {
   document.getElementById('scroll-driver').style.pointerEvents = 'none';
 });
 document.getElementById('btn-reset-view').addEventListener('click', () => {
+  camera.position.set(3000, 1800, 3000);
+  controls.target.set(0, 0, 0);
   camTargetPos.set(3000, 1800, 3000);
   camTargetLook.set(0, 0, 0);
-  controls.autoRotate = true;
-  controls.autoRotateSpeed = 0.4;
-  setRotateActive('btn-auto-rotate');
+  controls.autoRotate = false;
+  cameraLocked = false;
+  window._userForcedRotate = false;
+  window._isoMovedFor = null;
+  manualMode = false;
+  explodeLevel = 0;
+  targetExplode = 0;
+  targetDim = 0;
+  activeAssembly = -1;
+  hideOverview();
+  setRotateActive('btn-stop-rotate');
+  setTopLinkActive('btn-overview');
   restoreScrollLayer();
 });
 
@@ -961,6 +982,13 @@ document.getElementById('btn-overview').addEventListener('click', (e) => {
   targetExplode = 0;
   targetDim = 0;
   activeAssembly = -1;
+  window._userForcedRotate = false;
+  window._isoMovedFor = null;
+  cameraLocked = false;
+  // Set fixed isometric view, no rotation
+  controls.autoRotate = false;
+  camera.position.set(3000, 1800, 3000);
+  controls.target.set(0, 0, 0);
   setTopLinkActive('btn-overview');
   window.scrollTo({ top: 0, behavior: 'smooth' });
   if (overviewVisible) hideOverview();
