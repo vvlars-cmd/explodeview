@@ -45,12 +45,6 @@ const CONFIG = window.EXPLODEVIEW_CONFIG || {
   const finaleTitle = document.querySelector('.finale h2');
   if (finaleTitle) finaleTitle.innerHTML = `${CONFIG.brand} <span>${CONFIG.productName}</span>`;
 
-  // Product title bar
-  const prodTitle = document.getElementById('product-title');
-  if (prodTitle) {
-    const totalParts = ASSEMBLIES.reduce((sum, a) => sum + (a.indices[1] - a.indices[0]), 0);
-    prodTitle.innerHTML = `<span style="font-weight:200">${CONFIG.brand}</span> <span style="font-weight:700;color:#FFD100">${CONFIG.productName}</span><div id="product-stats" style="font-size:0.45rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;margin-top:1px;">${totalParts} Components &bull; ${ASSEMBLIES.length} Sub-Assemblies</div>`;
-  }
 })();
 
 // ─────────────────────────────────────────────
@@ -106,6 +100,13 @@ const ASSEMBLIES = [
     indices: [392, 399],
   },
 ];
+
+// Update product title with part counts
+const prodTitle = document.getElementById('product-title');
+if (prodTitle) {
+  const totalParts = ASSEMBLIES.reduce((sum, a) => sum + (a.indices[1] - a.indices[0]), 0);
+  prodTitle.innerHTML = `<span style="font-weight:200">${CONFIG.brand}</span> <span style="font-weight:700;color:#FFD100">${CONFIG.productName}</span><div style="font-size:0.45rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;margin-top:1px;">${totalParts} Components &bull; ${ASSEMBLIES.length} Sub-Assemblies</div>`;
+}
 
 // ─────────────────────────────────────────────
 //  GENERATE ASSEMBLY HTML SECTIONS + LEFT NAV
