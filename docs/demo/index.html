@@ -155,14 +155,14 @@
     const ltxt = document.getElementById('ltxt');
 
     // Load parts one at a time — no await blocking, fire-and-forget
-    let loadQueue = [...manifest];
+    let nextIdx = 0;
     let loading = 0;
     const maxConcurrent = 6;
 
     function loadNext() {
-      while (loading < maxConcurrent && loadQueue.length > 0) {
-        const p = loadQueue.shift();
-        const idx = manifest.indexOf(p);
+      while (loading < maxConcurrent && nextIdx < manifest.length) {
+        const idx = nextIdx++;
+        const p = manifest[idx];
         loading++;
         stl.load('./parts/' + p.file, geo => {
           geo.computeVertexNormals();

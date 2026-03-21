@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+</head>
+<body style="margin:0;background:#111">
+<div id="s" style="color:#fff;font-family:monospace;padding:20px;font-size:14px;"></div>
+<script type="module">
+const log = m => { document.getElementById('s').innerHTML += m + '<br>'; };
+try {
+  log('1. Importing THREE...');
+  const THREE = await import('three');
+  log('2. THREE OK');
+
+  const { STLLoader } = await import('three/addons/loaders/STLLoader.js');
+  log('3. STLLoader OK');
+
+  log('4. Fetching manifest...');
+  const res = await fetch('./manifest.json');
+  log('5. Manifest response: ' + res.status);
+  const manifest = await res.json();
+  log('6. Manifest parsed: ' + manifest.length + ' entries');
+
+  const valid = manifest.filter(p => p.fileSize > 2000);
+  log('7. Valid parts: ' + valid.length);
+
+  log('8. Fetching assemblies...');
+  const ares = await fetch('./assemblies.json');
+  log('9. Assemblies response: ' + ares.status);
+  const asms = await ares.json();
+  log('10. Assemblies: ' + asms.length);
+
+  log('11. Creating scene...');
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0e1a);
+  const camera = new THREE.PerspectiveCamera(35, innerWidth/innerHeight, 1, 15000);
+  camera.position.set(3000, 1800, 3000);
+  const renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 2.2;
+  document.body.appendChild(renderer.domElement);
+  scene.add(new THREE.AmbientLight(0xffffff, 2));
+  scene.add(new THREE.DirectionalLight(0xffffff, 3)).position.set(2000,3000,1500);
+  log('12. Scene OK');
+
+  // Center
+  let cx=0,cy=0,cz=0;
+  for(const p of valid){cx+=p.center[0];cy+=p.center[1];cz+=p.center[2];}
+  const mcx=cx/valid.length, mcy=cy/valid.length, mcz=cz/valid.length;
+
+  log('13. Loading 10 parts...');
+  const loader = new STLLoader();
+  let count = 0;
+  for (let i = 0; i < Math.min(10, valid.length); i++) {
+    const p = valid[i];
+    loader.load('./parts/' + p.file, geo => {
+      geo.computeVertexNormals();
+      geo.translate(-mcx, -mcz, mcy);
+      const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:0x44aaff, metalness:0.4, roughness:0.3, side:THREE.DoubleSide}));
+      scene.add(mesh);
+      count++;
+      log('  Loaded part ' + i + ': ' + p.file + ' (' + count + '/10)');
+    }, undefined, err => {
+      log('  ERROR part ' + i + ': ' + err);
+      count++;
+    });
+  }
+
+  // Render loop
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = Date.now() * 0.0002;
+    camera.position.set(Math.cos(t)*3000, 1800, Math.sin(t)*3000);
+    camera.lookAt(0,0,0);
+    renderer.render(scene, camera);
+  }
+  animate();
+  log('14. Render loop started');
+
+} catch(e) {
+  log('FATAL ERROR: ' + e.message);
+  log(e.stack);
+}
+</script>
+</body>
+</html>
