@@ -110,7 +110,7 @@ const ASSEMBLIES = [
 const prodTitle = document.getElementById('product-title');
 if (prodTitle) {
   const totalParts = ASSEMBLIES.reduce((sum, a) => sum + (a.indices[1] - a.indices[0]), 0);
-  prodTitle.innerHTML = `<span style="font-weight:200">${CONFIG.brand}</span> <span style="font-weight:700;color:#FFD100">${CONFIG.productName}</span><div style="font-size:0.45rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;margin-top:1px;">${totalParts} Components &bull; ${ASSEMBLIES.length} Sub-Assemblies</div>`;
+  prodTitle.innerHTML = `<span style="font-weight:300">${CONFIG.brand.toUpperCase()}</span> <span style="font-weight:800;color:#FFD100">${CONFIG.productName.toUpperCase()}</span><div style="font-size:0.65rem;color:rgba(255,255,255,0.55);letter-spacing:0.18em;margin-top:4px;font-weight:500;">${totalParts} COMPONENTS &bull; ${ASSEMBLIES.length} SUB-ASSEMBLIES</div>`;
 }
 
 // ─────────────────────────────────────────────
