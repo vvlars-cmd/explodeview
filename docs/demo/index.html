@@ -500,7 +500,7 @@
     #view-controls {
       position: fixed;
       right: 14px;
-      top: 270px;
+      bottom: 20px;
       z-index: 55;
       display: flex;
       flex-direction: column;
@@ -760,14 +760,31 @@
 
   <!-- Mobile title bar (shows full product name) -->
   <!-- ViewCube (top-right) -->
-  <!-- Collapse/Explode buttons (right side, above ViewCube) -->
-  <div id="ce-buttons" style="position:fixed;right:14px;top:80px;z-index:55;display:flex;flex-direction:column;gap:3px;">
-    <button class="vc-btn" id="btn-collapse" title="Collapse" style="font-size:0.5rem;width:auto;padding:4px 10px;">Collapse</button>
-    <button class="vc-btn" id="btn-explode" title="Explode" style="font-size:0.5rem;width:auto;padding:4px 10px;">Explode</button>
+  <!-- Collapse/Explode + Export (right side, compact row) -->
+  <div id="ce-buttons" style="position:fixed;right:14px;top:62px;z-index:55;display:flex;gap:3px;">
+    <button class="vc-btn" id="btn-collapse" title="Collapse" style="font-size:0.45rem;width:auto;padding:4px 8px;">Collapse</button>
+    <button class="vc-btn" id="btn-explode" title="Explode" style="font-size:0.45rem;width:auto;padding:4px 8px;">Explode</button>
+    <button class="vc-btn" id="btn-export" title="Export/Screenshot" style="font-size:0.45rem;width:auto;padding:4px 8px;">&#128247; Export</button>
+  </div>
+
+  <!-- Export Panel -->
+  <div id="export-panel" style="display:none;position:fixed;right:14px;top:95px;z-index:56;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 18px;width:200px;font-family:Inter,sans-serif;">
+    <div style="font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:10px;">Export Screenshot</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <button class="vc-btn" id="exp-png" style="width:100%;font-size:0.5rem;padding:6px;justify-content:center;">PNG (transparent)</button>
+      <button class="vc-btn" id="exp-jpg" style="width:100%;font-size:0.5rem;padding:6px;justify-content:center;">JPG (with background)</button>
+      <button class="vc-btn" id="exp-png-bg" style="width:100%;font-size:0.5rem;padding:6px;justify-content:center;">PNG (with background)</button>
+    </div>
+    <div style="font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin:10px 0 6px;">Resolution</div>
+    <select id="exp-res" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#aaa;padding:4px;border-radius:4px;font-size:0.5rem;font-family:inherit;">
+      <option value="1">1x (screen)</option>
+      <option value="2" selected>2x (high-res)</option>
+      <option value="4">4x (print quality)</option>
+    </select>
   </div>
 
   <!-- ViewCube with axis lines (Fusion 360 style) -->
-  <div id="viewcube" style="position:fixed;top:140px;right:10px;z-index:55;width:110px;height:110px;">
+  <div id="viewcube" style="position:fixed;top:100px;right:10px;z-index:55;width:110px;height:110px;">
     <!-- Home button -->
     <div id="vc-home" style="position:absolute;top:0;left:32px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.4);transition:color 0.2s;z-index:2;" title="Home View">&#8962;</div>
     <!-- Cube container -->
@@ -967,6 +984,6 @@
       }
     });
   </script>
-  <script type="module" src="./app.js?v=34"></script>
+  <script type="module" src="./app.js?v=35"></script>
 </body>
 </html>

@@ -1045,6 +1045,56 @@ function updateViewCube() {
   document.getElementById('ax-label-z')?.setAttribute('y', zy + 4);
 }
 
+// ─── Export / Screenshot ───
+document.getElementById('btn-export')?.addEventListener('click', () => {
+  const panel = document.getElementById('export-panel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+});
+
+function exportScreenshot(format, withBg) {
+  const scale = parseInt(document.getElementById('exp-res')?.value || '2');
+  const w = renderer.domElement.width;
+  const h = renderer.domElement.height;
+
+  // Resize for high-res
+  renderer.setSize(window.innerWidth * scale, window.innerHeight * scale);
+  renderer.setPixelRatio(1);
+
+  // Transparent background for PNG without BG
+  const origBg = scene.background;
+  if (!withBg && format === 'png') {
+    scene.background = null;
+    renderer.setClearColor(0x000000, 0);
+  }
+
+  renderer.render(scene, camera);
+
+  const canvas = renderer.domElement;
+  let dataUrl;
+  if (format === 'jpg') {
+    dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+  } else {
+    dataUrl = canvas.toDataURL('image/png');
+  }
+
+  // Restore
+  scene.background = origBg;
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  // Download
+  const link = document.createElement('a');
+  link.download = `${CONFIG.productName || 'model'}_${scale}x.${format}`;
+  link.href = dataUrl;
+  link.click();
+
+  document.getElementById('export-panel').style.display = 'none';
+}
+
+document.getElementById('exp-png')?.addEventListener('click', () => exportScreenshot('png', false));
+document.getElementById('exp-jpg')?.addEventListener('click', () => exportScreenshot('jpg', true));
+document.getElementById('exp-png-bg')?.addEventListener('click', () => exportScreenshot('png', true));
+
 // ─── Wireframe Toggle ───
 let wireframeOn = false;
 document.getElementById('btn-wireframe').addEventListener('click', () => {
