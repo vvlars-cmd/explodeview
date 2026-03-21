@@ -221,7 +221,8 @@ renderer.toneMappingExposure = 2.2;
 container.appendChild(renderer.domElement);
 
 // ─── Lighting ───
-scene.add(new THREE.AmbientLight(0x8899bb, 1.5));
+const ambientLight = new THREE.AmbientLight(0x8899bb, 1.5);
+scene.add(ambientLight);
 scene.add(new THREE.HemisphereLight(0xddeeff, 0x445566, 1.0));
 
 const keyLight = new THREE.DirectionalLight(0xfff5e6, 3.5);
@@ -812,18 +813,25 @@ function animate() {
     spot.position.lerp(new THREE.Vector3(ac.x * 0.5, 3000, ac.z * 0.5), delta * 2);
     spot.target.position.lerp(new THREE.Vector3(ac.x * 0.5, ac.y * 0.5, ac.z * 0.5), delta * 2);
 
-    // Stop rotation and move to isometric view when assembly selected
+    // Stop rotation on assembly select, move to isometric ONCE
     controls.autoRotate = false;
-    const ac2 = asmData[activeAssembly].center;
-    const isoDist = 2500;
-    // Isometric angle: 45° horizontal, 35° vertical
-    const isoPos = new THREE.Vector3(
-      ac2.x * 0.3 + isoDist * 0.707,
-      ac2.y * 0.3 + isoDist * 0.577,
-      ac2.z * 0.3 + isoDist * 0.707
-    );
-    camera.position.lerp(isoPos, delta * 2);
-    controls.target.lerp(new THREE.Vector3(ac2.x * 0.3, ac2.y * 0.3, ac2.z * 0.3), delta * 2);
+    if (!window._isoMovedFor || window._isoMovedFor !== activeAssembly) {
+      window._isoMovedFor = activeAssembly;
+      window._isoFrames = 0;
+    }
+    // Lerp to isometric for first 60 frames (~1 sec), then let user rotate freely
+    if (window._isoFrames < 60) {
+      window._isoFrames++;
+      const ac2 = asmData[activeAssembly].center;
+      const isoDist = 2500;
+      const isoPos = new THREE.Vector3(
+        ac2.x * 0.3 + isoDist * 0.707,
+        ac2.y * 0.3 + isoDist * 0.577,
+        ac2.z * 0.3 + isoDist * 0.707
+      );
+      camera.position.lerp(isoPos, delta * 3);
+      controls.target.lerp(new THREE.Vector3(ac2.x * 0.3, ac2.y * 0.3, ac2.z * 0.3), delta * 3);
+    }
   } else {
     spot.intensity = lerp(spot.intensity, 0, delta * 3);
     // Resume rotation when no assembly selected
@@ -852,12 +860,16 @@ function animate() {
     const fp = ud._finalPos;
     if (!fp) continue;
 
-    // Update line geometry: from origin to exploded position
+    // Update line geometry: from assembled position (0,0,0) to exploded offset
+    // mesh.position is the explosion offset from assembled position
     const positions = line.geometry.attributes.position.array;
-    // Start point: near origin (where part would be when assembled)
+    // Start: where part sits when assembled (no offset)
     positions[0] = 0; positions[1] = 0; positions[2] = 0;
-    // End point: current exploded position
+    // End: current exploded position (the offset)
     positions[3] = fp.x; positions[4] = fp.y; positions[5] = fp.z;
+    // Translate entire line to the part's original center
+    const oc = ud.origCenter;
+    line.position.set(oc.x, oc.y, oc.z);
     line.geometry.attributes.position.needsUpdate = true;
     line.computeLineDistances();
 
@@ -1089,6 +1101,53 @@ function updateBottomControls() {
   }
 }
 window.addEventListener('scroll', updateBottomControls, { passive: true });
+
+// ─── Settings Panel ───
+document.getElementById('btn-settings').addEventListener('click', () => {
+  const panel = document.getElementById('settings-panel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  document.getElementById('btn-settings').classList.toggle('active');
+});
+
+// Brightness (tone mapping exposure)
+document.getElementById('ctrl-brightness').addEventListener('input', (e) => {
+  renderer.toneMappingExposure = e.target.value / 100;
+});
+
+// Contrast (ambient light intensity)
+document.getElementById('ctrl-contrast').addEventListener('input', (e) => {
+  const val = e.target.value / 100;
+  // Adjust key light and fill light ratio for contrast effect
+  keyLight.intensity = 3.5 * val;
+  fillLight.intensity = 1.8 * (2 - val); // inverse — more contrast = less fill
+});
+
+// Ambient light
+document.getElementById('ctrl-ambient').addEventListener('input', (e) => {
+  ambientLight.intensity = e.target.value / 100;
+});
+
+// Background presets
+document.querySelectorAll('.bg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const color = btn.dataset.bg;
+    scene.background = new THREE.Color(color);
+    // Update ground to match
+    const groundColor = new THREE.Color(color).multiplyScalar(0.6);
+    ground.material.color.copy(groundColor);
+    // Highlight selected
+    document.querySelectorAll('.bg-btn').forEach(b => b.style.borderColor = 'rgba(255,255,255,0.08)');
+    btn.style.borderColor = '#0055A4';
+  });
+});
+
+// Close settings when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#settings-panel') && !e.target.closest('#btn-settings')) {
+    document.getElementById('settings-panel').style.display = 'none';
+    document.getElementById('btn-settings').classList.remove('active');
+  }
+});
 
 // ─── Start ───
 loadModel();
