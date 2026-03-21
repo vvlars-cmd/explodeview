@@ -792,24 +792,26 @@
     <div style="font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:12px;">Display Settings</div>
 
     <label style="font-size:0.55rem;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;">Brightness</label>
-    <input type="range" id="ctrl-brightness" min="50" max="300" value="220" style="width:100%;margin:4px 0 10px;accent-color:#0055A4;">
+    <input type="range" id="ctrl-brightness" min="20" max="500" value="220" style="width:100%;margin:4px 0 10px;accent-color:#0055A4;">
 
     <label style="font-size:0.55rem;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;">Contrast</label>
-    <input type="range" id="ctrl-contrast" min="50" max="200" value="100" style="width:100%;margin:4px 0 10px;accent-color:#0055A4;">
+    <input type="range" id="ctrl-contrast" min="10" max="400" value="100" style="width:100%;margin:4px 0 10px;accent-color:#0055A4;">
 
     <label style="font-size:0.55rem;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;">Ambient Light</label>
-    <input type="range" id="ctrl-ambient" min="0" max="300" value="150" style="width:100%;margin:4px 0 10px;accent-color:#0055A4;">
+    <input type="range" id="ctrl-ambient" min="0" max="500" value="150" style="width:100%;margin:4px 0 10px;accent-color:#0055A4;">
 
     <div style="font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin:12px 0 8px;">Background</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;" id="bg-presets">
       <button class="bg-btn" data-bg="#0a0e1a" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.15);background:#0a0e1a;cursor:pointer;" title="Dark Navy"></button>
-      <button class="bg-btn" data-bg="#000000" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:#000000;cursor:pointer;" title="Pure Black"></button>
+      <button class="bg-btn" data-bg="#000000" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:#000;cursor:pointer;" title="Pure Black"></button>
       <button class="bg-btn" data-bg="#1a1a2e" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:#1a1a2e;cursor:pointer;" title="Deep Purple"></button>
-      <button class="bg-btn" data-bg="#0d1b2a" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:#0d1b2a;cursor:pointer;" title="Midnight Blue"></button>
-      <button class="bg-btn" data-bg="#1b2631" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:#1b2631;cursor:pointer;" title="Charcoal"></button>
-      <button class="bg-btn" data-bg="#2c3e50" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:#2c3e50;cursor:pointer;" title="Slate"></button>
       <button class="bg-btn" data-bg="#f0f0f0" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:#f0f0f0;cursor:pointer;" title="Light Grey"></button>
-      <button class="bg-btn" data-bg="#ffffff" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:#ffffff;cursor:pointer;" title="White"></button>
+      <button class="bg-btn" data-bg="#ffffff" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:#fff;cursor:pointer;" title="White"></button>
+      <button class="bg-btn" data-bg="gradient-sunset" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,#ff7e5f,#feb47b);cursor:pointer;" title="Sunset"></button>
+      <button class="bg-btn" data-bg="gradient-sky" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,#4facfe,#00f2fe);cursor:pointer;" title="Sky Blue"></button>
+      <button class="bg-btn" data-bg="gradient-forest" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,#134e5e,#71b280);cursor:pointer;" title="Forest"></button>
+      <button class="bg-btn" data-bg="gradient-studio" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,#3a3a3a,#1a1a1a);cursor:pointer;" title="Studio"></button>
+      <button class="bg-btn" data-bg="gradient-warm" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,#ffd89b,#19547b);cursor:pointer;" title="Warm"></button>
     </div>
   </div>
 

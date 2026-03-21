@@ -688,40 +688,12 @@ function updateScrollState() {
   }
 }
 
-// ─────────────────────────────────────────────
-//  EXPLOSION LINES
-// ─────────────────────────────────────────────
-const explosionLines = [];
-const lineMaterial = new THREE.LineDashedMaterial({
-  color: 0x335577,
-  dashSize: 8,
-  gapSize: 6,
-  transparent: true,
-  opacity: 0,
-  depthTest: false,
-});
-
-// Create a line for each part (origin → exploded position)
-function createExplosionLines() {
-  // Only create lines for every Nth part to avoid clutter
-  for (let i = 0; i < allParts.length; i += 3) {
-    const geo = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0, 0, 0),
-    ]);
-    const line = new THREE.Line(geo, lineMaterial.clone());
-    line.computeLineDistances();
-    line.userData.partIdx = i;
-    scene.add(line);
-    explosionLines.push(line);
-  }
-}
+// Explosion lines removed for cleaner look
 
 // ─────────────────────────────────────────────
 //  RENDER LOOP
 // ─────────────────────────────────────────────
 const clock = new THREE.Clock();
-let linesCreated = false;
 
 function lerp(a, b, t) { return a + (b - a) * Math.min(1, t); }
 
@@ -813,8 +785,8 @@ function animate() {
     spot.position.lerp(new THREE.Vector3(ac.x * 0.5, 3000, ac.z * 0.5), delta * 2);
     spot.target.position.lerp(new THREE.Vector3(ac.x * 0.5, ac.y * 0.5, ac.z * 0.5), delta * 2);
 
-    // Stop rotation on assembly select, move to isometric ONCE
-    controls.autoRotate = false;
+    // Stop rotation on assembly select (unless user forced auto-rotate)
+    if (!window._userForcedRotate) controls.autoRotate = false;
     if (!window._isoMovedFor || window._isoMovedFor !== activeAssembly) {
       window._isoMovedFor = activeAssembly;
       window._isoFrames = 0;
@@ -834,48 +806,12 @@ function animate() {
     }
   } else {
     spot.intensity = lerp(spot.intensity, 0, delta * 3);
-    // Resume rotation when no assembly selected
-    if (!manualMode) controls.autoRotate = true;
   }
 
   // Camera smooth follow — only when auto-rotating, not when user is dragging
   if (controls.autoRotate) {
     camera.position.lerp(camTargetPos, delta * 1.5);
     controls.target.lerp(camTargetLook, delta * 1.5);
-  }
-
-  // ─── Explosion lines ───
-  if (!linesCreated && allParts.length > 0) {
-    createExplosionLines();
-    linesCreated = true;
-  }
-
-  // Update explosion lines: show when exploded, hide when collapsed
-  const lineTargetOpacity = explodeAmount > 0.1 ? 0.3 * explodeAmount : 0;
-  for (const line of explosionLines) {
-    const pi = line.userData.partIdx;
-    if (pi >= allParts.length) continue;
-    const part = allParts[pi];
-    const ud = part.userData;
-    const fp = ud._finalPos;
-    if (!fp) continue;
-
-    // Update line geometry: from assembled position (0,0,0) to exploded offset
-    // mesh.position is the explosion offset from assembled position
-    const positions = line.geometry.attributes.position.array;
-    // Start: where part sits when assembled (no offset)
-    positions[0] = 0; positions[1] = 0; positions[2] = 0;
-    // End: current exploded position (the offset)
-    positions[3] = fp.x; positions[4] = fp.y; positions[5] = fp.z;
-    // Translate entire line to the part's original center
-    const oc = ud.origCenter;
-    line.position.set(oc.x, oc.y, oc.z);
-    line.geometry.attributes.position.needsUpdate = true;
-    line.computeLineDistances();
-
-    // Fade opacity
-    line.material.opacity = lerp(line.material.opacity, lineTargetOpacity, delta * 3);
-    line.visible = line.material.opacity > 0.01;
   }
 
   // Rim light subtle animation
@@ -944,16 +880,19 @@ function restoreScrollLayer() {
 document.getElementById('btn-auto-rotate').addEventListener('click', () => {
   controls.autoRotate = true;
   controls.autoRotateSpeed = 0.4;
+  window._userForcedRotate = true;
   setRotateActive('btn-auto-rotate');
   restoreScrollLayer();
 });
 document.getElementById('btn-stop-rotate').addEventListener('click', () => {
   controls.autoRotate = false;
+  window._userForcedRotate = false;
   setRotateActive('btn-stop-rotate');
   restoreScrollLayer();
 });
 document.getElementById('btn-free-rotate').addEventListener('click', () => {
   controls.autoRotate = false;
+  window._userForcedRotate = false;
   setRotateActive('btn-free-rotate');
   // Bring canvas to front so user can drag-rotate freely
   document.getElementById('three-canvas').style.zIndex = '10';
@@ -1127,17 +1066,45 @@ document.getElementById('ctrl-ambient').addEventListener('input', (e) => {
   ambientLight.intensity = e.target.value / 100;
 });
 
-// Background presets
+// Background presets — solid colors and gradients
+const gradientColors = {
+  'gradient-sunset': [0xff7e5f, 0xfeb47b],
+  'gradient-sky': [0x4facfe, 0x00f2fe],
+  'gradient-forest': [0x134e5e, 0x71b280],
+  'gradient-studio': [0x3a3a3a, 0x1a1a1a],
+  'gradient-warm': [0xffd89b, 0x19547b],
+};
+
+function setGradientBackground(topColor, bottomColor) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 2; canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, 512);
+  const tc = new THREE.Color(topColor);
+  const bc = new THREE.Color(bottomColor);
+  grad.addColorStop(0, '#' + tc.getHexString());
+  grad.addColorStop(1, '#' + bc.getHexString());
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 2, 512);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.mapping = THREE.EquirectangularReflectionMapping;
+  scene.background = tex;
+  ground.material.color.copy(bc).multiplyScalar(0.8);
+}
+
 document.querySelectorAll('.bg-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    const color = btn.dataset.bg;
-    scene.background = new THREE.Color(color);
-    // Update ground to match
-    const groundColor = new THREE.Color(color).multiplyScalar(0.6);
-    ground.material.color.copy(groundColor);
-    // Highlight selected
+    const bg = btn.dataset.bg;
     document.querySelectorAll('.bg-btn').forEach(b => b.style.borderColor = 'rgba(255,255,255,0.08)');
     btn.style.borderColor = '#0055A4';
+
+    if (bg.startsWith('gradient-')) {
+      const [top, bot] = gradientColors[bg];
+      setGradientBackground(top, bot);
+    } else {
+      scene.background = new THREE.Color(bg);
+      ground.material.color.copy(new THREE.Color(bg)).multiplyScalar(0.6);
+    }
   });
 });
 
