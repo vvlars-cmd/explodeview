@@ -1005,15 +1005,17 @@ document.querySelectorAll('.cface').forEach(face => {
 const vcEl = document.getElementById('viewcube');
 if (vcEl) {
   let vcDragging = false, vcStartX = 0, vcStartY = 0;
+  let vcMoved = false;
   vcEl.addEventListener('mousedown', (e) => {
-    if (e.target.classList.contains('cface')) return; // let face clicks work
-    vcDragging = true; vcStartX = e.clientX; vcStartY = e.clientY;
+    vcDragging = true; vcMoved = false; vcStartX = e.clientX; vcStartY = e.clientY;
     vcEl.style.cursor = 'grabbing';
+    e.preventDefault();
   });
   document.addEventListener('mousemove', (e) => {
     if (!vcDragging) return;
-    const dx = (e.clientX - vcStartX) * 0.01;
-    const dy = (e.clientY - vcStartY) * 0.01;
+    vcMoved = true;
+    const dx = (e.clientX - vcStartX) * 0.008;
+    const dy = (e.clientY - vcStartY) * 0.008;
     // Orbit camera
     const spherical = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
     spherical.theta -= dx;
@@ -1180,17 +1182,14 @@ document.getElementById('ctrl-vpos').addEventListener('input', (e) => {
   modelYOffset = parseInt(e.target.value);
 });
 
-// Environment rotation
+// Environment rotation — rotate all lights around the model
+let envRotation = 0;
 document.getElementById('ctrl-env-rotate').addEventListener('input', (e) => {
-  const angle = (e.target.value / 360) * Math.PI * 2;
-  if (scene.background && scene.background.isTexture) {
-    scene.background.rotation = angle;
-    scene.background.needsUpdate = true;
-  }
-  if (scene.environment && scene.environment.isTexture) {
-    scene.environment.rotation = angle;
-    scene.environment.needsUpdate = true;
-  }
+  envRotation = (e.target.value / 360) * Math.PI * 2;
+  const r = 3000;
+  keyLight.position.set(Math.cos(envRotation) * r, 3000, Math.sin(envRotation) * r);
+  fillLight.position.set(Math.cos(envRotation + 2.5) * r, 1000, Math.sin(envRotation + 2.5) * r);
+  backLight.position.set(Math.cos(envRotation + Math.PI) * r, 500, Math.sin(envRotation + Math.PI) * r);
 });
 
 // Ground plane toggle
@@ -1200,14 +1199,21 @@ document.getElementById('ctrl-ground').addEventListener('change', (e) => {
 
 // Reflections (ground mirror effect)
 document.getElementById('ctrl-reflections').addEventListener('change', (e) => {
+  ground.visible = true; // Force ground visible for reflections
   if (e.target.checked) {
-    ground.material.metalness = 0.95;
-    ground.material.roughness = 0.05;
-    ground.material.color.set(0x333333);
+    ground.material.metalness = 0.98;
+    ground.material.roughness = 0.02;
+    ground.material.color.set(0x444444);
+    ground.material.transparent = true;
+    ground.material.opacity = 0.7;
+    ground.material.envMapIntensity = 2.0;
   } else {
     ground.material.metalness = 0.7;
     ground.material.roughness = 0.3;
     ground.material.color.set(0x151a2a);
+    ground.material.transparent = false;
+    ground.material.opacity = 1;
+    ground.material.envMapIntensity = 1.0;
   }
   ground.material.needsUpdate = true;
 });
