@@ -1020,7 +1020,7 @@ async function loadEnvHDR(name) {
     texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.background = texture;
     scene.environment = texture;
-    ground.material.color.set(0x222222);
+    ground.visible = false;
     document.getElementById('progress-text').textContent = '';
   });
 }
@@ -1070,6 +1070,8 @@ document.querySelectorAll('.bg-btn').forEach(btn => {
     document.querySelectorAll('.bg-btn').forEach(b => b.style.borderColor = 'rgba(255,255,255,0.08)');
     btn.style.borderColor = '#0055A4';
 
+    scene.environment = null;
+    ground.visible = true;
     if (bg.startsWith('gradient-')) {
       const [top, bot] = gradientColors[bg];
       setGradientBackground(top, bot);
