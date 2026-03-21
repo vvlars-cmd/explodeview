@@ -8,8 +8,6 @@ import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 const CONFIG = window.EXPLODEVIEW_CONFIG || {
   brand: 'cycleWASH',           // Brand name (first part of logo)
   productName: 'Station Basic', // Product name (second part, shown bold)
-  quoteUrl: '',                 // URL for "Get a Quote" button. Empty = scroll to finale
-  quoteLabel: 'Get a Quote',    // Button label
   tagline: 'Engineered in Germany. 399 precision components. One seamless cleaning experience.',
   badge: 'Professional Bike Washing',
 };
@@ -38,9 +36,6 @@ const CONFIG = window.EXPLODEVIEW_CONFIG || {
   const heroTagline = document.querySelector('.tagline');
   if (heroTagline) heroTagline.textContent = CONFIG.tagline;
 
-  // Quote button
-  const quoteBtn = document.getElementById('btn-quote');
-  if (quoteBtn) quoteBtn.textContent = CONFIG.quoteLabel;
 
   // Finale
   const finaleTitle = document.querySelector('.finale h2');
@@ -858,16 +853,60 @@ function setTopLinkActive(id) {
   document.getElementById(id)?.classList.add('active');
 }
 
+// Overview overlay
+let overviewVisible = false;
+const overviewEl = document.createElement('div');
+overviewEl.id = 'overview-panel';
+overviewEl.style.cssText = 'position:fixed;top:50px;right:20px;z-index:55;background:rgba(0,0,0,0.7);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px 24px;max-width:300px;display:none;color:#fff;font-family:Inter,sans-serif;';
+document.body.appendChild(overviewEl);
+
+function showOverview() {
+  const totalParts = manifest.length;
+  const asmList = ASSEMBLIES.map((a, i) => {
+    const count = a.indices[1] - a.indices[0];
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+      <div style="width:8px;height:8px;border-radius:50%;background:${a.color};flex-shrink:0;"></div>
+      <div style="flex:1;font-size:0.65rem;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.7);">${a.name}</div>
+      <div style="font-size:0.6rem;color:rgba(255,255,255,0.35);">${count}</div>
+    </div>`;
+  }).join('');
+
+  overviewEl.innerHTML = `
+    <div style="font-size:0.5rem;letter-spacing:0.3em;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:8px;">Model Overview</div>
+    <div style="font-size:1.2rem;font-weight:700;color:#FFD100;">${CONFIG.productName}</div>
+    <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px;">${CONFIG.brand}</div>
+    <div style="display:flex;gap:20px;margin:16px 0;padding:12px 0;border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div><div style="font-size:1.4rem;font-weight:700;color:#fff;">${totalParts}</div><div style="font-size:0.45rem;letter-spacing:0.15em;color:rgba(255,255,255,0.3);text-transform:uppercase;">Components</div></div>
+      <div><div style="font-size:1.4rem;font-weight:700;color:#fff;">${ASSEMBLIES.length}</div><div style="font-size:0.45rem;letter-spacing:0.15em;color:rgba(255,255,255,0.3);text-transform:uppercase;">Sub-Assemblies</div></div>
+    </div>
+    <div style="font-size:0.5rem;letter-spacing:0.15em;color:rgba(255,255,255,0.25);text-transform:uppercase;margin-bottom:6px;">Sub-Assemblies</div>
+    ${asmList}
+  `;
+  overviewEl.style.display = 'block';
+  overviewVisible = true;
+}
+
+function hideOverview() {
+  overviewEl.style.display = 'none';
+  overviewVisible = false;
+}
+
 document.getElementById('btn-overview').addEventListener('click', (e) => {
   e.preventDefault();
   manualMode = false;
   explodeLevel = 0;
+  targetExplode = 0;
+  targetDim = 0;
+  activeAssembly = -1;
   setTopLinkActive('btn-overview');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (overviewVisible) hideOverview();
+  else showOverview();
 });
 
 document.getElementById('btn-collapse').addEventListener('click', (e) => {
   e.preventDefault();
+  hideOverview();
   manualMode = true;
   manualExplode = false;
   targetExplode = 0;
@@ -879,6 +918,7 @@ document.getElementById('btn-collapse').addEventListener('click', (e) => {
 
 document.getElementById('btn-explode').addEventListener('click', (e) => {
   e.preventDefault();
+  hideOverview();
   manualMode = true;
   manualExplode = true;
   targetExplode = 1;
@@ -888,16 +928,7 @@ document.getElementById('btn-explode').addEventListener('click', (e) => {
   setTopLinkActive('btn-explode');
 });
 
-document.getElementById('btn-quote').addEventListener('click', (e) => {
-  e.preventDefault();
-  if (CONFIG.quoteUrl) {
-    window.open(CONFIG.quoteUrl, '_blank');
-  } else {
-    const finale = document.querySelector('[data-phase="finale"]');
-    if (finale) finale.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-  setTopLinkActive('btn-quote');
-});
+// btn-quote removed
 
 // Exit manual mode when user scrolls
 window.addEventListener('scroll', () => {
