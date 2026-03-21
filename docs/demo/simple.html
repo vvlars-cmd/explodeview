@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Simple Test</title>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+<style>*{margin:0;padding:0}body{background:#0a0e1a;overflow:hidden;font-family:sans-serif;color:#fff}
+#info{position:fixed;top:10px;left:10px;font-size:12px;color:lime;z-index:99}</style>
+</head><body>
+<div id="info">Starting...</div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+
+const info = document.getElementById('info');
+const log = m => { info.textContent = m; console.log(m); };
+
+log('Setting up scene...');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0e1a);
+const camera = new THREE.PerspectiveCamera(35, innerWidth/innerHeight, 1, 15000);
+camera.position.set(3000, 1800, 3000);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 2.2;
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0x8899bb, 1.5));
+scene.add(new THREE.HemisphereLight(0xddeeff, 0x445566, 1.0));
+const kl = new THREE.DirectionalLight(0xfff5e6, 3.5); kl.position.set(2000,3000,1500); scene.add(kl);
+scene.add(Object.assign(new THREE.DirectionalLight(0xaaccff,1.8),{position:new THREE.Vector3(-1500,1000,-1000)}));
+scene.add(Object.assign(new THREE.DirectionalLight(0xffffff,1.2),{position:new THREE.Vector3(0,500,-2500)}));
+const gnd = new THREE.Mesh(new THREE.PlaneGeometry(12000,12000), new THREE.MeshStandardMaterial({color:0x151a2a,metalness:0.7,roughness:0.3}));
+gnd.rotation.x=-Math.PI/2; gnd.position.y=-500; scene.add(gnd);
+
+const ctrl = new OrbitControls(camera, renderer.domElement);
+ctrl.enableDamping=true; ctrl.dampingFactor=0.05;
+
+// Render loop — starts immediately
+function animate() { requestAnimationFrame(animate); ctrl.update(); renderer.render(scene, camera); }
+animate();
+
+log('Fetching manifest...');
+const manifest = await (await fetch('./manifest.json')).json();
+log('Manifest: ' + manifest.length + ' parts');
+
+let cx=0,cy=0,cz=0;
+for(const p of manifest){cx+=p.center[0];cy+=p.center[1];cz+=p.center[2];}
+const mcx=cx/manifest.length, mcy=cy/manifest.length, mcz=cz/manifest.length;
+
+const loader = new STLLoader();
+let loaded = 0;
+
+function loadPart(i) {
+  if (i >= manifest.length) { log('ALL DONE: ' + loaded); return; }
+  const p = manifest[i];
+  loader.load('./parts/' + p.file, geo => {
+    geo.computeVertexNormals();
+    geo.translate(-mcx, -mcz, mcy);
+    const hue = i / manifest.length;
+    const col = new THREE.Color().setHSL(hue, 0.4, 0.6);
+    const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:col, metalness:0.4, roughness:0.35, side:THREE.DoubleSide}));
+    scene.add(mesh);
+    loaded++;
+    if (loaded % 50 === 0) log('Loaded: ' + loaded + '/' + manifest.length);
+    loadPart(i + 1);
+  }, undefined, () => { loaded++; loadPart(i + 1); });
+}
+log('Loading parts...');
+loadPart(0);
+</script>
+</body></html>

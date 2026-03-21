@@ -1,3 +1,7 @@
+window.onerror = (msg, src, line) => {
+  document.getElementById('progress-text').textContent = 'JS Error: ' + msg + ' (line ' + line + ')';
+};
+
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
@@ -713,7 +717,7 @@ document.getElementById('btn-zoom-out').addEventListener('click', () => {
 });
 
 function setRotateActive(id) {
-  ['btn-auto-rotate', 'btn-stop-rotate', 'btn-free-rotate'].forEach(b =>
+  ['btn-auto-rotate', 'btn-stop-rotate'].forEach(b =>
     document.getElementById(b)?.classList.remove('active'));
   document.getElementById(id)?.classList.add('active');
 }
@@ -738,14 +742,7 @@ document.getElementById('btn-stop-rotate').addEventListener('click', () => {
   setRotateActive('btn-stop-rotate');
   restoreScrollLayer();
 });
-document.getElementById('btn-free-rotate').addEventListener('click', () => {
-  controls.autoRotate = false;
-  window._userForcedRotate = false;
-  setRotateActive('btn-free-rotate');
-  // Bring canvas to front so user can drag-rotate freely
-  document.getElementById('three-canvas').style.zIndex = '10';
-  document.getElementById('scroll-driver').style.pointerEvents = 'none';
-});
+// btn-free-rotate removed
 document.getElementById('btn-reset-view').addEventListener('click', () => {
   camera.position.set(3000, 1800, 3000);
   controls.target.set(0, 0, 0);
