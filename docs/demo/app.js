@@ -115,7 +115,7 @@ const homeItem = document.createElement('div');
 homeItem.className = 'nav-item';
 homeItem.style.color = '#FFD100';
 homeItem.style.borderColor = 'rgba(255,209,0,0.15)';
-homeItem.innerHTML = `<div class="nav-dot" style="background:#FFD100"></div><div class="nav-label" style="font-weight:600;">HOME</div>`;
+homeItem.innerHTML = `<div class="nav-dot" style="background:#FFD100"></div><div class="nav-label" style="font-weight:600;">VIEWS</div>`;
 homeItem.addEventListener('click', () => {
   activeAssembly = -1; targetDim = 0; targetExplode = 0; explodeLevel = 0;
   manualMode = false; cameraLocked = false; window._isoMovedFor = null;
@@ -997,6 +997,40 @@ document.getElementById('ctrl-contrast').addEventListener('input', (e) => {
 // Ambient light
 document.getElementById('ctrl-ambient').addEventListener('input', (e) => {
   ambientLight.intensity = e.target.value / 100;
+});
+
+// Environment HDR presets (Poly Haven — free CC0)
+const envUrls = {
+  'warehouse': 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/empty_warehouse_01_1k.hdr',
+  'city': 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/kloppenheim_06_puresky_1k.hdr',
+  'park': 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/green_point_park_1k.hdr',
+  'courtyard': 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/courtyard_1k.hdr',
+};
+
+let rgbeLoader = null;
+async function loadEnvHDR(name) {
+  if (!rgbeLoader) {
+    const { RGBELoader } = await import('three/addons/loaders/RGBELoader.js');
+    rgbeLoader = new RGBELoader();
+  }
+  const url = envUrls[name];
+  if (!url) return;
+  document.getElementById('progress-text').textContent = 'Loading environment...';
+  rgbeLoader.load(url, (texture) => {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    scene.background = texture;
+    scene.environment = texture;
+    ground.material.color.set(0x222222);
+    document.getElementById('progress-text').textContent = '';
+  });
+}
+
+document.querySelectorAll('[data-env]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.bg-btn').forEach(b => b.style.borderColor = 'rgba(255,255,255,0.08)');
+    btn.style.borderColor = '#0055A4';
+    loadEnvHDR(btn.dataset.env);
+  });
 });
 
 // Background presets — solid colors and gradients
