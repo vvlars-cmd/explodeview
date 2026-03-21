@@ -405,100 +405,121 @@ async function loadModel() {
     for (let pi = start; pi < end; pi++) partAsmIndex[pi] = ai;
   }
 
-  // Load STLs sequentially
-  let _loadIdx = 0;
-  function _loadNext() {
-    if (_loadIdx >= manifest.length) {
-      for (const ad of asmData) { if (!ad.meshes.length) continue; const c = new THREE.Vector3(); for (const m of ad.meshes) c.add(m.userData.origCenter); c.divideScalar(ad.meshes.length); ad.center.copy(c); }
-      setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
-      return;
-    }
-    const partInfo = manifest[_loadIdx];
-    const idx = _loadIdx;
-    _loadIdx++;
-    stlLoader.load('./parts/' + partInfo.file, geo => {
-        geo.computeVertexNormals();
+  // Load all parts from merged binary chunks (3 requests instead of 399)
+  progressText.textContent = 'Downloading model...';
+  const idxResponse = await fetch('./model_index.json');
+  const modelIndex = await idxResponse.json();
 
-        // Realistic material per assembly
-        const ai = partAsmIndex[idx];
-        let baseColor, baseMetal, baseRough;
-
-        const asmKey = ai >= 0 ? ASSEMBLIES[ai].key : '';
-        switch (asmKey) {
-          case 'BG_Metall-Teile': // Brushed stainless steel
-          case 'Stellfuss':
-            baseColor = new THREE.Color(0xc8ccd2);
-            baseMetal = 0.75;
-            baseRough = 0.25;
-            break;
-          case 'BG_Kunststoff': // Matte black ABS plastic (covers + ramp)
-            baseColor = new THREE.Color(0x1a1a1e);
-            baseMetal = 0.0;
-            baseRough = 0.85;
-            break;
-          case 'BG_Achse': // Grey rubber wheels + steel axle
-            baseColor = new THREE.Color(0x555558);
-            baseMetal = 0.1;
-            baseRough = 0.7;
-            break;
-          case 'Raddreheinheit': // Steel mechanical parts
-            baseColor = new THREE.Color(0xb0b5bc);
-            baseMetal = 0.6;
-            baseRough = 0.3;
-            break;
-          case 'Oelabscheider': // Metallic blue
-            baseColor = new THREE.Color(0x1a5fa0);
-            baseMetal = 0.65;
-            baseRough = 0.2;
-            break;
-          default:
-            baseColor = new THREE.Color(0xb0b8c4);
-            baseMetal = 0.4;
-            baseRough = 0.35;
-        }
-
-        const mat = new THREE.MeshStandardMaterial({
-          color: baseColor, metalness: baseMetal, roughness: baseRough, side: THREE.DoubleSide,
-        });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.castShadow = true; mesh.receiveShadow = true;
-
-        const oc = new THREE.Vector3(
-          partInfo.center[0] - modelCenter.x,
-          partInfo.center[2] - modelCenter.z,
-          -(partInfo.center[1] - modelCenter.y)
-        );
-        geo.translate(-modelCenter.x, -modelCenter.z, modelCenter.y);
-
-        const dir = oc.clone();
-        if (dir.length() < 1) dir.set(0,1,0);
-        dir.normalize();
-
-        const vol = partInfo.bbox[0]*partInfo.bbox[1]*partInfo.bbox[2];
-        let dist;
-        if (vol > 50000000) dist = 250 + Math.random()*120;
-        else if (vol > 1000000) dist = 400 + Math.random()*300;
-        else dist = 600 + Math.random()*500;
-
-        mesh.userData = {
-          idx, asmIdx: partAsmIndex[idx],
-          explodeDir: dir, explodeDist: dist,
-          origCenter: oc, baseColor: baseColor.clone(),
-          baseMetal, baseRough,
-        };
-
-        scene.add(mesh);
-        allParts.push(mesh);
-
-        if (ai >= 0) asmData[ai].meshes.push(mesh);
-
-        loadedCount++;
-        progressFill.style.width = (loadedCount/totalParts*100)+'%';
-        progressText.textContent = `${loadedCount} / ${totalParts}`;
-        _loadNext();
-      }, undefined, () => { loadedCount++; _loadNext(); });
+  // Download all chunks and concatenate
+  const chunkBuffers = [];
+  let downloadedBytes = 0;
+  for (const chunk of modelIndex.chunks) {
+    const res = await fetch('./' + chunk.file);
+    const buf = await res.arrayBuffer();
+    chunkBuffers.push(new Uint8Array(buf));
+    downloadedBytes += buf.byteLength;
+    progressText.textContent = `Downloading: ${(downloadedBytes / 1024 / 1024).toFixed(0)} MB`;
   }
-  _loadNext();
+
+  // Merge chunks into single buffer
+  const binBuffer = new ArrayBuffer(modelIndex.totalSize);
+  const merged = new Uint8Array(binBuffer);
+  let writeOffset = 0;
+  for (const chunk of chunkBuffers) {
+    merged.set(chunk, writeOffset);
+    writeOffset += chunk.length;
+  }
+  const binView = new DataView(binBuffer);
+
+  progressText.textContent = 'Processing parts...';
+  const partCount = binView.getUint32(0, true);
+  const headerSize = 4;
+  const indexSize = partCount * 8;
+
+  const stlParser = new STLLoader();
+
+  for (let idx = 0; idx < partCount && idx < manifest.length; idx++) {
+    const offset = binView.getUint32(headerSize + idx * 8, true);
+    const length = binView.getUint32(headerSize + idx * 8 + 4, true);
+    if (length < 100) continue; // skip degenerate
+
+    const stlBytes = new Uint8Array(binBuffer, offset, length);
+    const geo = stlParser.parse(stlBytes.buffer.slice(offset, offset + length));
+    geo.computeVertexNormals();
+
+    const partInfo = manifest[idx];
+    const ai = partAsmIndex[idx];
+    let baseColor, baseMetal, baseRough;
+
+    const asmKey = ai >= 0 ? ASSEMBLIES[ai].key : '';
+    switch (asmKey) {
+      case 'BG_Metall-Teile':
+      case 'Stellfuss':
+        baseColor = new THREE.Color(0xc8ccd2); baseMetal = 0.75; baseRough = 0.25; break;
+      case 'BG_Kunststoff':
+        baseColor = new THREE.Color(0x1a1a1e); baseMetal = 0.0; baseRough = 0.85; break;
+      case 'BG_Achse':
+        baseColor = new THREE.Color(0x555558); baseMetal = 0.1; baseRough = 0.7; break;
+      case 'Raddreheinheit':
+        baseColor = new THREE.Color(0xb0b5bc); baseMetal = 0.6; baseRough = 0.3; break;
+      case 'Oelabscheider':
+        baseColor = new THREE.Color(0x1a5fa0); baseMetal = 0.65; baseRough = 0.2; break;
+      default:
+        baseColor = new THREE.Color(0xb0b8c4); baseMetal = 0.4; baseRough = 0.35;
+    }
+
+    const mat = new THREE.MeshStandardMaterial({
+      color: baseColor, metalness: baseMetal, roughness: baseRough, side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+
+    const oc = new THREE.Vector3(
+      partInfo.center[0] - modelCenter.x,
+      partInfo.center[2] - modelCenter.z,
+      -(partInfo.center[1] - modelCenter.y)
+    );
+    geo.translate(-modelCenter.x, -modelCenter.z, modelCenter.y);
+
+    const dir = oc.clone();
+    if (dir.length() < 1) dir.set(0, 1, 0);
+    dir.normalize();
+
+    const vol = partInfo.bbox[0] * partInfo.bbox[1] * partInfo.bbox[2];
+    let dist;
+    if (vol > 50000000) dist = 250 + Math.random() * 120;
+    else if (vol > 1000000) dist = 400 + Math.random() * 300;
+    else dist = 600 + Math.random() * 500;
+
+    mesh.userData = {
+      idx, asmIdx: partAsmIndex[idx],
+      explodeDir: dir, explodeDist: dist,
+      origCenter: oc, baseColor: baseColor.clone(),
+      baseMetal, baseRough,
+    };
+
+    scene.add(mesh);
+    allParts.push(mesh);
+
+    if (ai >= 0) asmData[ai].meshes.push(mesh);
+
+    loadedCount++;
+    if (loadedCount % 20 === 0 || loadedCount === totalParts) {
+      progressFill.style.width = (loadedCount / totalParts * 100) + '%';
+      progressText.textContent = `${loadedCount} / ${totalParts}`;
+    }
+  }
+
+  // Compute assembly centers
+  for (const ad of asmData) {
+    if (!ad.meshes.length) continue;
+    const c = new THREE.Vector3();
+    for (const m of ad.meshes) c.add(m.userData.origCenter);
+    c.divideScalar(ad.meshes.length);
+    ad.center.copy(c);
+  }
+
+  setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
 }
 
 // ─────────────────────────────────────────────

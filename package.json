@@ -1,6 +1,6 @@
 {
   "name": "explodeview",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Embeddable 3D exploded-view viewer for STEP/CAD files. Turn any CAD assembly into an interactive product showcase.",
   "main": "src/explodeview.js",
   "types": "src/explodeview.d.ts",
