@@ -266,23 +266,72 @@
       transition: opacity 1.2s ease;
     }
     #loader.hidden { opacity: 0; pointer-events: none; }
-    #loader h1 {
-      font-size: 2.5rem; font-weight: 200;
-      letter-spacing: 0.4em;
+
+    /* Animated logo */
+    .loader-logo {
+      position: relative;
+      margin-bottom: 2rem;
     }
-    #loader h1 span { font-weight: 700; color: var(--yellow); }
+    .loader-logo h1 {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 200;
+      letter-spacing: 0.3em;
+      opacity: 0;
+      animation: logoFadeIn 1.5s ease 0.2s forwards;
+    }
+    .loader-logo h1 span {
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--yellow), #fff, var(--yellow));
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: logoShimmer 2.5s ease infinite;
+    }
+    .loader-product {
+      font-size: clamp(0.7rem, 2vw, 1rem);
+      font-weight: 300;
+      letter-spacing: 0.5em;
+      color: rgba(255,255,255,0.3);
+      text-align: center;
+      margin-top: 0.5rem;
+      opacity: 0;
+      animation: logoFadeIn 1s ease 0.8s forwards;
+    }
+    .loader-ring {
+      width: 80px; height: 80px;
+      border: 2px solid rgba(255,255,255,0.05);
+      border-top: 2px solid var(--yellow);
+      border-right: 2px solid var(--cyan);
+      border-radius: 50%;
+      animation: loaderSpin 1.2s linear infinite;
+      margin-bottom: 2rem;
+    }
     #progress-bar {
-      width: 200px; height: 1px;
-      background: #1a1a1a; margin-top: 2rem;
+      width: 200px; height: 2px;
+      background: rgba(255,255,255,0.06); margin-top: 0;
+      border-radius: 1px; overflow: hidden;
     }
     #progress-fill {
       height: 100%; width: 0%;
-      background: var(--cyan);
-      transition: width 0.2s;
+      background: linear-gradient(90deg, var(--cyan), var(--yellow));
+      transition: width 0.3s;
+      border-radius: 1px;
     }
     #progress-text {
-      margin-top: 1rem; font-size: 0.6rem;
-      color: #333; letter-spacing: 0.15em;
+      margin-top: 0.8rem; font-size: 0.55rem;
+      color: rgba(255,255,255,0.2); letter-spacing: 0.15em;
+    }
+
+    @keyframes logoFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes logoShimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes loaderSpin {
+      to { transform: rotate(360deg); }
     }
 
     /* ─── Sound Toggle ─── */
@@ -632,7 +681,11 @@
 <body>
   <!-- Loader -->
   <div id="loader">
-    <h1 id="loader-title">cycleWASH <span>Station Basic</span></h1>
+    <div class="loader-ring"></div>
+    <div class="loader-logo">
+      <h1 id="loader-title">cycle<span>WASH</span></h1>
+      <div class="loader-product">STATION BASIC</div>
+    </div>
     <div id="progress-bar"><div id="progress-fill"></div></div>
     <div id="progress-text">Loading 3D model...</div>
   </div>
