@@ -3,194 +3,645 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ExplodeView Demo — cycleWASH Station Basic</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="importmap">
-  {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
-  </script>
+  <title>cycleWASH Station Basic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800;900&family=SF+Pro+Display:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{background:#0a0e1a;overflow:hidden;font-family:'Inter',sans-serif;color:#fff}
-    canvas{display:block}
-    #loader{position:fixed;inset:0;background:#0a0e1a;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;transition:opacity 1s}
-    #loader.hidden{opacity:0;pointer-events:none}
-    #loader h1{font-size:2rem;font-weight:200;letter-spacing:.3em}
-    #loader h1 span{font-weight:700;color:#FFD100}
-    .bar{width:200px;height:2px;background:#1a1a2a;margin-top:1.2rem;border-radius:1px;overflow:hidden}
-    .fill{height:100%;width:0%;background:linear-gradient(90deg,#0055A4,#FFD100);transition:width .2s}
-    .txt{font-size:.6rem;color:#556;letter-spacing:.12em;margin-top:.8rem}
-    #top{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(0,0,0,.5);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.06);z-index:20}
-    .brand{font-size:.75rem;font-weight:200;letter-spacing:.2em}.brand b{font-weight:700;color:#FFD100}
-    .nav{display:flex;gap:4px}
-    .nb{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#889;padding:5px 14px;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:4px;font-family:inherit;transition:all .25s}
-    .nb:hover{background:rgba(0,85,164,.12);border-color:rgba(0,85,164,.4);color:#fff}
-    .nb.a{background:rgba(0,85,164,.18);border-color:rgba(0,85,164,.5);color:#4da6ff}
-    #lnav{position:fixed;left:12px;top:50%;transform:translateY(-50%);z-index:15;display:flex;flex-direction:column;gap:3px}
-    .ni{display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;border:1px solid rgba(255,255,255,.05);border-radius:5px;background:rgba(0,0,0,.3);backdrop-filter:blur(6px);min-width:140px;transition:all .3s}
-    .ni:hover{border-color:rgba(255,255,255,.12)}.ni.a{border-color:currentColor;background:rgba(0,85,164,.1)}
-    .nd{width:7px;height:7px;border-radius:50%;flex-shrink:0}.ni.a .nd{width:9px;height:9px;box-shadow:0 0 8px currentColor}
-    .nl{font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);font-weight:500;white-space:nowrap}.ni.a .nl{color:inherit;font-weight:700}
-    #rc{position:fixed;right:12px;top:50%;transform:translateY(-50%);z-index:15;display:flex;flex-direction:column;gap:3px;padding:6px;background:rgba(0,0,0,.35);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.05);border-radius:8px}
-    .cb{width:32px;height:32px;border-radius:5px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);color:#778;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;font-family:inherit}
-    .cb:hover{background:rgba(0,85,164,.12);border-color:rgba(0,85,164,.35);color:#fff}
-    .cb.a{background:rgba(0,85,164,.18);border-color:rgba(0,85,164,.45);color:#4da6ff}
-    .cd{width:20px;height:1px;background:rgba(255,255,255,.06);margin:1px auto}
-    #info{position:fixed;left:12px;bottom:16px;z-index:15;pointer-events:none;opacity:0;transform:translateY(10px);transition:all .5s;max-width:280px}
-    #info.v{opacity:1;transform:translateY(0)}
+    :root {
+      --cyan: #0055A4;
+      --yellow: #FFD100;
+      --bg: #0a0e1a;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: white;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ─── Fixed 3D Canvas ─── */
+    #three-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 1;
+    }
+    #three-canvas canvas {
+      touch-action: none;
+    }
+
+    /* ─── Scroll Container (drives animation) ─── */
+    #scroll-driver {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+    #scroll-driver .assembly-text,
+    #scroll-driver .finale .cta,
+    #scroll-driver .hero {
+      pointer-events: none;
+    }
+
+    /* ─── Hero Section ─── */
+    .hero {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      pointer-events: none;
+    }
+    .hero-badge {
+      font-size: 0.65rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 1s ease 0.3s forwards;
+    }
+    .hero h1 {
+      font-size: clamp(3rem, 8vw, 7rem);
+      font-weight: 200;
+      letter-spacing: 0.15em;
+      line-height: 1;
+      opacity: 0;
+      animation: fadeUp 1.2s ease 0.5s forwards;
+    }
+    .hero h1 span {
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--cyan), var(--yellow));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero .model-name {
+      font-size: clamp(1rem, 2.5vw, 1.8rem);
+      font-weight: 300;
+      letter-spacing: 0.4em;
+      color: rgba(255,255,255,0.55);
+      margin-top: 1rem;
+      opacity: 0;
+      animation: fadeUp 1s ease 0.8s forwards;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.4);
+    }
+    .hero .tagline {
+      font-size: 1rem;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.7);
+      margin-top: 2rem;
+      max-width: 550px;
+      line-height: 1.8;
+      opacity: 0;
+      animation: fadeUp 1s ease 1.1s forwards;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+    }
+    .scroll-hint {
+      position: absolute;
+      bottom: 40px;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #334;
+      opacity: 0;
+      animation: fadeUp 1s ease 1.5s forwards, pulse 2s ease 2.5s infinite;
+    }
+    .scroll-hint::after {
+      content: '';
+      display: block;
+      width: 1px; height: 30px;
+      background: linear-gradient(to bottom, #334, transparent);
+      margin: 0.8rem auto 0;
+    }
+
+    /* ─── Assembly Sections ─── */
+    .assembly-section {
+      height: 200vh;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .assembly-text {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 0 6vh 80px;
+      max-width: 32vw;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+      pointer-events: none;
+    }
+    .assembly-text.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .assembly-number {
+      font-size: 0.55rem;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+    .assembly-name {
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+    }
+    .assembly-subtitle {
+      font-size: clamp(0.85rem, 1.2vw, 1.1rem);
+      font-weight: 300;
+      color: rgba(255,255,255,0.6);
+      margin-top: 0.8rem;
+      letter-spacing: 0.05em;
+      line-height: 1.6;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+    }
+    .assembly-detail {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.4);
+      margin-top: 1.5rem;
+      letter-spacing: 0.06em;
+      line-height: 1.8;
+      max-width: 400px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+    .assembly-line {
+      width: 40px; height: 2px;
+      margin-top: 1.5rem;
+      border-radius: 1px;
+    }
+
+    /* ─── Spacer Sections ─── */
+    .spacer { height: 100vh; }
+    .spacer-half { height: 50vh; }
+
+    /* ─── Finale ─── */
+    .finale {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      pointer-events: none;
+    }
+    .finale .cta { pointer-events: auto; }
+    .finale h2 {
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 200;
+      letter-spacing: 0.2em;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+    }
+    .finale h2 span {
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--cyan), var(--yellow));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .finale .specs {
+      display: flex;
+      gap: 4rem;
+      margin-top: 3rem;
+      padding: 2rem 3rem;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+    }
+    .spec {
+      text-align: center;
+    }
+    .spec-value {
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--cyan), var(--yellow));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .spec-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+      margin-top: 0.4rem;
+    }
+    .finale .cta {
+      margin-top: 3rem;
+      padding: 14px 40px;
+      background: linear-gradient(135deg, var(--cyan), var(--yellow));
+      color: #000;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .finale .cta:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 40px rgba(0,85,164,0.4);
+    }
+
+    /* ─── Loading ─── */
+    #loader {
+      position: fixed; inset: 0;
+      background: #0a0e1a;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 1000;
+      transition: opacity 1.2s ease;
+    }
+    #loader.hidden { opacity: 0; pointer-events: none; }
+    #loader h1 {
+      font-size: 2.5rem; font-weight: 200;
+      letter-spacing: 0.4em;
+    }
+    #loader h1 span { font-weight: 700; color: var(--yellow); }
+    #progress-bar {
+      width: 200px; height: 1px;
+      background: #1a1a1a; margin-top: 2rem;
+    }
+    #progress-fill {
+      height: 100%; width: 0%;
+      background: var(--cyan);
+      transition: width 0.2s;
+    }
+    #progress-text {
+      margin-top: 1rem; font-size: 0.6rem;
+      color: #333; letter-spacing: 0.15em;
+    }
+
+    /* ─── Sound Toggle ─── */
+    #sound-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #667;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #sound-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    #sound-btn.on { border-color: var(--cyan); color: var(--cyan); }
+
+    /* ─── Top Navigation Bar ─── */
+    #top-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+      height: 52px;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: transform 0.4s ease;
+    }
+    .top-logo {
+      font-size: 0.85rem;
+      font-weight: 200;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+    }
+    .top-logo span { font-weight: 700; color: var(--yellow); }
+    .top-links {
+      display: flex;
+      gap: 28px;
+    }
+    .top-link {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.45);
+      text-decoration: none;
+      text-transform: uppercase;
+      font-weight: 400;
+      transition: color 0.3s;
+      cursor: pointer;
+    }
+    .top-link:hover, .top-link.active { color: white; }
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* ─── Bottom Controls ─── */
+    #bottom-controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 50px;
+    }
+    .ctrl-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #aaa;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+    .ctrl-btn:hover {
+      background: rgba(0,212,255,0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+    .ctrl-progress {
+      position: relative;
+      width: 200px;
+      height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .ctrl-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--cyan), var(--yellow));
+      border-radius: 2px;
+      transition: width 0.2s;
+    }
+    .ctrl-progress-label {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.5rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #556;
+      white-space: nowrap;
+    }
+
+    /* ─── 3D View Controls (right side) ─── */
+    #view-controls {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 55;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+    }
+    .vc-btn {
+      width: 36px; height: 36px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #889;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s;
+      font-family: inherit;
+    }
+    .vc-btn:hover {
+      background: rgba(0,85,164,0.15);
+      border-color: rgba(0,85,164,0.4);
+      color: white;
+    }
+    .vc-btn.active {
+      background: rgba(0,85,164,0.2);
+      border-color: rgba(0,85,164,0.5);
+      color: #4da6ff;
+    }
+    .vc-divider {
+      width: 24px;
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+      margin: 2px auto;
+    }
+
+    /* ─── Left Navigation ─── */
+    #left-nav {
+      position: fixed;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      opacity: 1;
+    .nav-line { display: none; }
+    .nav-items {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: all 0.35s ease;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 6px;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      min-width: 180px;
+    }
+    .nav-item:hover {
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.04);
+    }
+    .nav-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+      transition: all 0.4s ease;
+      flex-shrink: 0;
+    }
+    .nav-item.active {
+      border-color: currentColor;
+      background: rgba(0,85,164,0.12);
+      box-shadow: 0 0 20px rgba(0,85,164,0.15);
+    }
+    .nav-item.active .nav-dot {
+      box-shadow: 0 0 10px currentColor;
+      width: 10px; height: 10px;
+    }
+    .nav-item.past {
+      border-color: rgba(255,255,255,0.08);
+    }
+    .nav-item.past .nav-dot {
+      opacity: 0.5;
+    }
+    .nav-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      white-space: nowrap;
+      transition: all 0.4s ease;
+      font-weight: 500;
+    }
+    .nav-item.active .nav-label {
+      color: inherit;
+      font-weight: 700;
+    }
+    .nav-item.past .nav-label {
+      color: inherit;
+      opacity: 0.4;
+    }
+    .nav-item:hover .nav-label {
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* ─── Animations ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
   </style>
 </head>
 <body>
-<div id="loader"><h1>cycle<span>WASH</span></h1><div style="font-size:.85rem;font-weight:300;color:rgba(255,255,255,.4);margin-top:4px;letter-spacing:.3em">STATION BASIC</div><div class="bar"><div class="fill" id="fill"></div></div><div class="txt" id="ltxt">Loading 3D model...</div></div>
-<div id="top"><div class="brand">cycle<b>WASH</b> Station Basic</div><div class="nav"><button class="nb a" id="bov">Overview</button><button class="nb" id="bco">Collapse</button><button class="nb" id="bex">Explode</button></div></div>
-<div id="lnav"></div>
-<div id="rc"><button class="cb" id="bp">+</button><button class="cb" id="bm">−</button><div class="cd"></div><button class="cb a" id="bar">↻</button><button class="cb" id="bsr">■</button><button class="cb" id="bfr">⚙</button><div class="cd"></div><button class="cb" id="brs">↺</button></div>
-<div id="info"><div id="inum" style="font-size:.5rem;letter-spacing:.3em;font-weight:500"></div><div id="iname" style="font-size:1.5rem;font-weight:800;margin-top:4px;text-shadow:0 2px 10px rgba(0,0,0,.5)"></div><div id="isub" style="font-size:.7rem;font-weight:300;color:rgba(255,255,255,.55);margin-top:4px"></div></div>
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+  <!-- Loader -->
+  <div id="loader">
+    <h1>cycle<span>WASH</span></h1>
+    <div id="progress-bar"><div id="progress-fill"></div></div>
+    <div id="progress-text">Loading 3D model...</div>
+  </div>
 
-const ASMS=[
-  {name:"METAL FRAME",sub:"Brushed Stainless Steel",color:"#D0D4DA",i:[0,220]},
-  {name:"PROTECTIVE COVERS",sub:"Matte Black ABS",color:"#2A2A30",i:[220,225]},
-  {name:"MOUNTING SYSTEM",sub:"Stainless Steel Feet",color:"#B8BCC4",i:[225,237]},
-  {name:"WHEEL AXLE",sub:"Grey Rubber & Steel",color:"#6E6E72",i:[237,278]},
-  {name:"WHEEL TURNING UNIT",sub:"Motorized Drive",color:"#0055A4",i:[278,392]},
-  {name:"OIL SEPARATOR",sub:"Metallic Blue Steel",color:"#2277CC",i:[392,399]}
-];
+  <!-- 3D Canvas -->
+  <div id="three-canvas"></div>
 
-// Scene
-const scene=new THREE.Scene(); scene.background=new THREE.Color(0x0a0e1a);
-const camera=new THREE.PerspectiveCamera(35,innerWidth/innerHeight,1,15000);
-camera.position.set(3000,1800,3000);
-const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=2.2;
-document.body.appendChild(renderer.domElement);
+  <!-- Scroll-driven content -->
+  <div id="scroll-driver">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-badge">Professional Bike Washing</div>
+      <h1>cycle<span>WASH</span></h1>
+      <div class="model-name">STATION BASIC</div>
+      <div class="tagline">Engineered in Germany. 399 precision components. One seamless cleaning experience.</div>
+      <div class="scroll-hint">Scroll to explore</div>
+    </section>
 
-scene.add(new THREE.AmbientLight(0x8899bb,1.5));
-scene.add(new THREE.HemisphereLight(0xddeeff,0x445566,1.0));
-const kl=new THREE.DirectionalLight(0xfff5e6,3.5);kl.position.set(2000,3000,1500);kl.castShadow=true;scene.add(kl);
-scene.add(Object.assign(new THREE.DirectionalLight(0xaaccff,1.8),{position:new THREE.Vector3(-1500,1000,-1000)}));
-scene.add(Object.assign(new THREE.DirectionalLight(0xffffff,1.2),{position:new THREE.Vector3(0,500,-2500)}));
-scene.add(Object.assign(new THREE.DirectionalLight(0x0055A4,0.8),{position:new THREE.Vector3(-500,1500,-2000)}));
-scene.add(Object.assign(new THREE.DirectionalLight(0xeeeeff,0.5),{position:new THREE.Vector3(0,4000,0)}));
-const spot=new THREE.SpotLight(0xffffff,0,0,Math.PI/5,0.6,1);spot.position.set(0,3000,0);scene.add(spot);scene.add(spot.target);
-const gnd=new THREE.Mesh(new THREE.PlaneGeometry(12000,12000),new THREE.MeshStandardMaterial({color:0x151a2a,metalness:0.7,roughness:0.3}));
-gnd.rotation.x=-Math.PI/2;gnd.position.y=-500;gnd.receiveShadow=true;scene.add(gnd);
+    <!-- Spacer for initial explosion -->
+    <section class="spacer" data-phase="explode"></section>
 
-const ctrl=new OrbitControls(camera,renderer.domElement);
-ctrl.enableDamping=true;ctrl.dampingFactor=0.05;ctrl.autoRotate=true;ctrl.autoRotateSpeed=0.4;ctrl.minDistance=800;ctrl.maxDistance=5500;
+    <!-- Assembly sections (generated by JS) -->
+    <div id="assembly-sections"></div>
 
-// Load data
-const manifest=await(await fetch('./manifest.json')).json();
-let cx=0,cy=0,cz=0;
-for(const p of manifest){cx+=p.center[0];cy+=p.center[1];cz+=p.center[2];}
-const mcx=cx/manifest.length,mcy=cy/manifest.length,mcz=cz/manifest.length;
+    <!-- Reassemble spacer -->
+    <section class="spacer" data-phase="reassemble"></section>
 
-const partAsm=new Array(manifest.length).fill(-1);
-for(let a=0;a<ASMS.length;a++){const[s,e]=ASMS[a].i;for(let p=s;p<e;p++)partAsm[p]=a;}
-const asmData=ASMS.map(a=>({...a,meshes:[],center:new THREE.Vector3(),colorObj:new THREE.Color(a.color)}));
-const allParts=[];
+    <!-- Finale -->
+    <section class="finale" data-phase="finale">
+      <h2>cycle<span>WASH</span></h2>
+      <div class="specs">
+        <div class="spec">
+          <div class="spec-value">399</div>
+          <div class="spec-label">Components</div>
+        </div>
+        <div class="spec">
+          <div class="spec-value">6</div>
+          <div class="spec-label">Sub-Assemblies</div>
+        </div>
+        <div class="spec">
+          <div class="spec-value">100%</div>
+          <div class="spec-label">Stainless Steel</div>
+        </div>
+      </div>
+      <button class="cta">Request a Quote</button>
+    </section>
+  </div>
 
-// State
-let explodeAmt=0,targetExp=0,dimAmt=0,targetDim=0,activeAsm=-1,expLevel=0,manual=false;
-const lerp=(a,b,t)=>a+(b-a)*Math.min(1,t);
+  <!-- Left Navigation (Apple-style) -->
+  <nav id="left-nav">
+    <div class="nav-line"></div>
+    <div class="nav-items" id="nav-items"></div>
+  </nav>
 
-// Start render loop immediately
-const clock=new THREE.Clock();
-(function animate(){
-  requestAnimationFrame(animate);
-  const dt=Math.min(clock.getDelta(),0.05);
-  explodeAmt=lerp(explodeAmt,targetExp,dt*3);
-  dimAmt=lerp(dimAmt,targetDim,dt*4);
-  const scale=manual?Math.max(expLevel,1):1;
-  for(const mesh of allParts){
-    const u=mesh.userData,isH=(u.ai===activeAsm);
-    let pe;if(activeAsm>=0&&dimAmt>0.1){pe=isH?explodeAmt*(1-dimAmt):explodeAmt;}else{pe=explodeAmt;}
-    u._ce=lerp(u._ce,pe,dt*4);
-    const ed=u.dist*u._ce*scale;
-    mesh.position.set(u.dir.x*ed,u.dir.y*ed,u.dir.z*ed);
-    const m=mesh.material;
-    if(dimAmt>0.05&&activeAsm>=0){
-      if(isH){const hc=asmData[activeAsm].colorObj;m.color.lerp(hc,dt*6);m.emissive.copy(hc).multiplyScalar(0.1*dimAmt);m.transparent=false;m.opacity=1;}
-      else{m.color.lerp(new THREE.Color(0x181820),dt*5);m.emissive.setHex(0);m.transparent=true;m.opacity=lerp(m.opacity,1-dimAmt*0.7,dt*4);}
-    }else{m.color.lerp(u.bc,dt*3);m.emissive.lerp(new THREE.Color(0),dt*5);m.transparent=false;m.opacity=1;}
-  }
-  if(activeAsm>=0&&dimAmt>0.3){const ac=asmData[activeAsm].center;spot.intensity=lerp(spot.intensity,4*dimAmt,dt*3);spot.position.lerp(new THREE.Vector3(ac.x*.5,3000,ac.z*.5),dt*2);spot.target.position.lerp(new THREE.Vector3(ac.x*.5,ac.y*.5,ac.z*.5),dt*2);}
-  else{spot.intensity=lerp(spot.intensity,0,dt*3);}
-  ctrl.update();
-  renderer.render(scene,camera);
-})();
+  <!-- Top Navigation Bar -->
+  <header id="top-nav">
+    <div class="top-logo">cycle<span>WASH</span></div>
+    <nav class="top-links">
+      <a href="#" class="top-link active" id="btn-overview">Overview</a>
+      <a href="#" class="top-link" id="btn-collapse">Collapse</a>
+      <a href="#" class="top-link" id="btn-explode">Explode</a>
+      <a href="#" class="top-link" id="btn-quote">Get a Quote</a>
+    </nav>
+    <div class="top-actions">
+      <button id="sound-btn" title="Toggle sound">&#9834;</button>
+    </div>
+  </header>
 
-// Load parts sequentially (proven working)
-const stl=new STLLoader();
-let loaded=0;
-const fill=document.getElementById('fill'),ltxt=document.getElementById('ltxt');
+  <!-- Bottom Controls -->
+  <div id="bottom-controls">
+    <button class="ctrl-btn" id="btn-prev" title="Previous">&larr;</button>
+    <div class="ctrl-progress">
+      <div class="ctrl-progress-fill" id="ctrl-progress-fill"></div>
+      <div class="ctrl-progress-label" id="ctrl-label">Scroll to explore</div>
+    </div>
+    <button class="ctrl-btn" id="btn-next" title="Next">&rarr;</button>
+  </div>
 
-function loadPart(idx){
-  if(idx>=manifest.length){
-    for(const ad of asmData){if(!ad.meshes.length)continue;const c=new THREE.Vector3();for(const m of ad.meshes)c.add(m.userData.oc);c.divideScalar(ad.meshes.length);ad.center.copy(c);}
-    setTimeout(()=>document.getElementById('loader').classList.add('hidden'),500);
-    return;
-  }
-  const p=manifest[idx];
-  stl.load('./parts/'+p.file, geo=>{
-    geo.computeVertexNormals(); geo.translate(-mcx,-mcz,mcy);
-    const ai=partAsm[idx];
-    const col=ai>=0?new THREE.Color(ASMS[ai].color):new THREE.Color(0xb0b8c4);
-    const hsl={};col.getHSL(hsl);
-    const bc=new THREE.Color().setHSL(hsl.h,hsl.s*0.4,0.6);
-    const mat=new THREE.MeshStandardMaterial({color:bc,metalness:0.45,roughness:0.35,side:THREE.DoubleSide});
-    const mesh=new THREE.Mesh(geo,mat);mesh.castShadow=true;mesh.receiveShadow=true;
-    const oc=new THREE.Vector3(p.center[0]-mcx,p.center[2]-mcz,-(p.center[1]-mcy));
-    const dir=oc.clone();if(dir.length()<1)dir.set(0,1,0);dir.normalize();
-    const vol=p.bbox[0]*p.bbox[1]*p.bbox[2];
-    let dist;if(vol>50000000)dist=250+Math.random()*120;else if(vol>1000000)dist=400+Math.random()*300;else dist=600+Math.random()*500;
-    mesh.userData={ai,dir,dist,oc,bc:bc.clone(),_ce:0};
-    scene.add(mesh);allParts.push(mesh);
-    if(ai>=0)asmData[ai].meshes.push(mesh);
-    loaded++;fill.style.width=(loaded/manifest.length*100)+'%';ltxt.textContent=loaded+'/'+manifest.length;
-    loadPart(idx+1);
-  },undefined,()=>{loaded++;loadPart(idx+1);});
-}
-loadPart(0);
+  <!-- 3D View Controls (right side) -->
+  <div id="view-controls">
+    <button class="vc-btn" id="btn-zoom-in" title="Expand Explosion">+</button>
+    <button class="vc-btn" id="btn-zoom-out" title="Collapse">&minus;</button>
+    <div class="vc-divider"></div>
+    <button class="vc-btn active" id="btn-auto-rotate" title="Auto Rotate">&#10227;</button>
+    <button class="vc-btn" id="btn-stop-rotate" title="Stop Rotation">&#9632;</button>
+    <button class="vc-btn" id="btn-free-rotate" title="Free 3D Rotate">&#9978;</button>
+    <div class="vc-divider"></div>
+    <button class="vc-btn" id="btn-reset-view" title="Reset View">&#8634;</button>
+  </div>
 
-// Left nav
-const lnav=document.getElementById('lnav');
-ASMS.forEach((a,i)=>{
-  const d=document.createElement('div');d.className='ni';d.style.color=a.color;
-  d.innerHTML=`<div class="nd" style="background:${a.color}"></div><div class="nl">${a.name}</div>`;
-  d.onclick=()=>selAsm(i);lnav.appendChild(d);
-});
-
-function selAsm(i){
-  if(activeAsm===i){activeAsm=-1;targetDim=0;document.getElementById('info').classList.remove('v');}
-  else{activeAsm=i;targetExp=1;targetDim=1;if(expLevel<.5)expLevel=1;manual=true;
-    document.getElementById('inum').textContent=`0${i+1} / 0${ASMS.length}`;document.getElementById('inum').style.color=ASMS[i].color;
-    document.getElementById('iname').textContent=ASMS[i].name;document.getElementById('iname').style.color=ASMS[i].color;
-    document.getElementById('isub').textContent=ASMS[i].sub;document.getElementById('info').classList.add('v');}
-  lnav.querySelectorAll('.ni').forEach((n,j)=>n.classList.toggle('a',j===activeAsm));
-}
-
-// Top buttons
-function setNb(id){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('a'));document.getElementById(id)?.classList.add('a');}
-document.getElementById('bov').onclick=()=>{manual=false;expLevel=0;targetExp=0;targetDim=0;activeAsm=-1;document.getElementById('info').classList.remove('v');lnav.querySelectorAll('.ni').forEach(n=>n.classList.remove('a'));setNb('bov');};
-document.getElementById('bco').onclick=()=>{manual=true;targetExp=0;expLevel=0;targetDim=0;activeAsm=-1;document.getElementById('info').classList.remove('v');lnav.querySelectorAll('.ni').forEach(n=>n.classList.remove('a'));setNb('bco');};
-document.getElementById('bex').onclick=()=>{manual=true;targetExp=1;expLevel=1;targetDim=0;activeAsm=-1;document.getElementById('info').classList.remove('v');lnav.querySelectorAll('.ni').forEach(n=>n.classList.remove('a'));setNb('bex');};
-
-// +/- controls
-document.getElementById('bp').onclick=()=>{expLevel=Math.min(3,expLevel+.25);manual=true;targetExp=Math.min(expLevel,1);};
-document.getElementById('bm').onclick=()=>{expLevel=Math.max(0,expLevel-.25);manual=true;targetExp=Math.min(expLevel,1);};
-
-// Rotate controls
-function setRb(el){document.querySelectorAll('#rc .cb').forEach(b=>b.classList.remove('a'));el.classList.add('a');}
-document.getElementById('bar').onclick=function(){ctrl.autoRotate=true;ctrl.autoRotateSpeed=0.4;setRb(this);};
-document.getElementById('bsr').onclick=function(){ctrl.autoRotate=false;setRb(this);};
-document.getElementById('bfr').onclick=function(){ctrl.autoRotate=false;setRb(this);};
-document.getElementById('brs').onclick=()=>{camera.position.set(3000,1800,3000);ctrl.target.set(0,0,0);ctrl.autoRotate=true;manual=false;expLevel=0;targetExp=0;targetDim=0;activeAsm=-1;document.getElementById('info').classList.remove('v');lnav.querySelectorAll('.ni').forEach(n=>n.classList.remove('a'));setNb('bov');setRb(document.getElementById('bar'));};
-
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-</script>
+  <script type="importmap">
+  {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+  </script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
