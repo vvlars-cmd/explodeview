@@ -798,6 +798,31 @@
     <label style="font-size:0.55rem;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;">Field of View</label>
     <input type="range" id="ctrl-fov" min="15" max="90" value="35" style="width:100%;margin:4px 0 10px;accent-color:#0055A4;">
 
+    <div style="font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin:12px 0 8px;">Scene</div>
+
+    <label style="font-size:0.55rem;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;">Env Rotation</label>
+    <input type="range" id="ctrl-env-rotate" min="0" max="360" value="0" style="width:100%;margin:4px 0 10px;accent-color:#0055A4;">
+
+    <div style="display:flex;gap:10px;margin:6px 0;">
+      <label style="display:flex;align-items:center;gap:5px;font-size:0.5rem;color:rgba(255,255,255,0.5);cursor:pointer;">
+        <input type="checkbox" id="ctrl-ground" checked style="accent-color:#0055A4;"> Ground Plane
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:0.5rem;color:rgba(255,255,255,0.5);cursor:pointer;">
+        <input type="checkbox" id="ctrl-reflections" style="accent-color:#0055A4;"> Reflections
+      </label>
+    </div>
+    <div style="display:flex;gap:10px;margin:6px 0;">
+      <label style="display:flex;align-items:center;gap:5px;font-size:0.5rem;color:rgba(255,255,255,0.5);cursor:pointer;">
+        <input type="checkbox" id="ctrl-shadows" checked style="accent-color:#0055A4;"> Shadows
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;font-size:0.5rem;color:rgba(255,255,255,0.5);cursor:pointer;">
+        <input type="checkbox" id="ctrl-edges" style="accent-color:#0055A4;"> Edges
+      </label>
+    </div>
+
+    <label style="font-size:0.55rem;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;margin-top:6px;">Shadow Intensity</label>
+    <input type="range" id="ctrl-shadow-int" min="0" max="100" value="50" style="width:100%;margin:4px 0 10px;accent-color:#0055A4;">
+
     <div style="font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin:12px 0 8px;">Background</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;" id="bg-presets">
       <button class="bg-btn" data-bg="#0a0e1a" style="width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.15);background:#0a0e1a;cursor:pointer;" title="Dark Navy"></button>
@@ -880,6 +905,6 @@
       }
     });
   </script>
-  <script type="module" src="./app.js?v=26"></script>
+  <script type="module" src="./app.js?v=27"></script>
 </body>
 </html>

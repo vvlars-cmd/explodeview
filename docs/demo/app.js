@@ -1013,6 +1013,63 @@ document.getElementById('ctrl-fov').addEventListener('input', (e) => {
   camera.updateProjectionMatrix();
 });
 
+// Environment rotation
+document.getElementById('ctrl-env-rotate').addEventListener('input', (e) => {
+  const angle = (e.target.value / 360) * Math.PI * 2;
+  if (scene.background && scene.background.isTexture) {
+    scene.background.rotation = angle;
+    scene.background.needsUpdate = true;
+  }
+  if (scene.environment && scene.environment.isTexture) {
+    scene.environment.rotation = angle;
+    scene.environment.needsUpdate = true;
+  }
+});
+
+// Ground plane toggle
+document.getElementById('ctrl-ground').addEventListener('change', (e) => {
+  ground.visible = e.target.checked;
+});
+
+// Reflections (ground metalness)
+document.getElementById('ctrl-reflections').addEventListener('change', (e) => {
+  ground.material.metalness = e.target.checked ? 0.9 : 0.7;
+  ground.material.roughness = e.target.checked ? 0.1 : 0.3;
+});
+
+// Shadows toggle
+document.getElementById('ctrl-shadows').addEventListener('change', (e) => {
+  renderer.shadowMap.enabled = e.target.checked;
+  keyLight.castShadow = e.target.checked;
+  // Force material updates
+  for (const mesh of allParts) mesh.material.needsUpdate = true;
+  ground.material.needsUpdate = true;
+});
+
+// Edge display (wireframe overlay)
+document.getElementById('ctrl-edges').addEventListener('change', (e) => {
+  for (const mesh of allParts) {
+    if (e.target.checked) {
+      if (!mesh.userData._edgeLine) {
+        const edges = new THREE.EdgesGeometry(mesh.geometry, 15);
+        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 }));
+        mesh.add(line);
+        mesh.userData._edgeLine = line;
+      }
+      mesh.userData._edgeLine.visible = true;
+    } else {
+      if (mesh.userData._edgeLine) mesh.userData._edgeLine.visible = false;
+    }
+  }
+});
+
+// Shadow intensity
+document.getElementById('ctrl-shadow-int').addEventListener('input', (e) => {
+  const val = e.target.value / 100;
+  keyLight.shadow.opacity = val;
+  ground.material.opacity = 0.5 + val * 0.5;
+});
+
 // Environment HDR presets (Poly Haven — free CC0)
 const envUrls = {
   'warehouse': 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/empty_warehouse_01_1k.hdr',
