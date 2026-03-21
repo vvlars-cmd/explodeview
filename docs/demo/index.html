@@ -5,262 +5,192 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ExplodeView Demo — cycleWASH Station Basic</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:#0a0e1a; overflow:hidden; font-family:'Inter',sans-serif; color:#fff; }
-    canvas { display:block; }
-
-    #loader { position:fixed; inset:0; background:#0a0e1a; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; transition:opacity 1s; }
-    #loader.hidden { opacity:0; pointer-events:none; }
-    #loader h2 { font-size:1.5rem; font-weight:200; letter-spacing:0.3em; }
-    #loader h2 b { font-weight:700; color:#FFD100; }
-    .bar { width:200px; height:2px; background:#1a1a2a; margin-top:1.2rem; border-radius:1px; overflow:hidden; }
-    .fill { height:100%; width:0%; background:linear-gradient(90deg,#0055A4,#FFD100); transition:width 0.2s; }
-    .txt { font-size:0.6rem; color:#445; letter-spacing:0.12em; margin-top:0.8rem; }
-
-    #topbar { position:fixed; top:0; left:0; right:0; height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; background:rgba(0,0,0,0.5); backdrop-filter:blur(16px); border-bottom:1px solid rgba(255,255,255,0.06); z-index:20; }
-    .brand { font-size:0.75rem; font-weight:200; letter-spacing:0.2em; }
-    .brand b { font-weight:700; color:#FFD100; }
-    .nav { display:flex; gap:4px; }
-    .btn { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:#889; padding:5px 14px; font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; border-radius:4px; font-family:inherit; transition:all 0.25s; }
-    .btn:hover { background:rgba(0,85,164,0.12); border-color:rgba(0,85,164,0.4); color:#fff; }
-    .btn.active { background:rgba(0,85,164,0.18); border-color:rgba(0,85,164,0.5); color:#4da6ff; }
-
-    #leftnav { position:fixed; left:12px; top:50%; transform:translateY(-50%); z-index:15; display:flex; flex-direction:column; gap:3px; }
-    .ni { display:flex; align-items:center; gap:8px; padding:7px 10px; cursor:pointer; border:1px solid rgba(255,255,255,0.05); border-radius:5px; background:rgba(0,0,0,0.3); backdrop-filter:blur(6px); min-width:140px; transition:all 0.3s; }
-    .ni:hover { border-color:rgba(255,255,255,0.12); }
-    .ni.active { border-color:currentColor; background:rgba(0,85,164,0.1); }
-    .nd { width:7px; height:7px; border-radius:50%; flex-shrink:0; transition:all 0.3s; }
-    .ni.active .nd { width:9px; height:9px; box-shadow:0 0 8px currentColor; }
-    .nl { font-size:0.5rem; letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.2); font-weight:500; white-space:nowrap; transition:all 0.3s; }
-    .ni.active .nl { color:inherit; font-weight:700; }
-
-    #controls { position:fixed; right:12px; top:50%; transform:translateY(-50%); z-index:15; display:flex; flex-direction:column; gap:3px; padding:6px; background:rgba(0,0,0,0.35); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.05); border-radius:8px; }
-    .cb { width:32px; height:32px; border-radius:5px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); color:#778; font-size:0.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.25s; font-family:inherit; }
-    .cb:hover { background:rgba(0,85,164,0.12); border-color:rgba(0,85,164,0.35); color:#fff; }
-    .cb.active { background:rgba(0,85,164,0.18); border-color:rgba(0,85,164,0.45); color:#4da6ff; }
-    .cd { width:20px; height:1px; background:rgba(255,255,255,0.06); margin:1px auto; }
-
-    #info { position:fixed; left:12px; bottom:16px; z-index:15; pointer-events:none; opacity:0; transform:translateY(10px); transition:all 0.5s; max-width:280px; }
-    #info.visible { opacity:1; transform:translateY(0); }
-  </style>
   <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
-    }
-  }
+  {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
   </script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#0a0e1a;overflow:hidden;font-family:'Inter',sans-serif;color:#fff}
+    canvas{display:block}
+    #loader{position:fixed;inset:0;background:#0a0e1a;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;transition:opacity 1s}
+    #loader.hidden{opacity:0;pointer-events:none}
+    #loader h1{font-size:2rem;font-weight:200;letter-spacing:.3em}
+    #loader h1 span{font-weight:700;color:#FFD100}
+    .bar{width:200px;height:2px;background:#1a1a2a;margin-top:1.2rem;border-radius:1px;overflow:hidden}
+    .fill{height:100%;width:0%;background:linear-gradient(90deg,#0055A4,#FFD100);transition:width .2s}
+    .txt{font-size:.6rem;color:#556;letter-spacing:.12em;margin-top:.8rem}
+    #top{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(0,0,0,.5);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.06);z-index:20}
+    .brand{font-size:.75rem;font-weight:200;letter-spacing:.2em}.brand b{font-weight:700;color:#FFD100}
+    .nav{display:flex;gap:4px}
+    .nb{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#889;padding:5px 14px;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:4px;font-family:inherit;transition:all .25s}
+    .nb:hover{background:rgba(0,85,164,.12);border-color:rgba(0,85,164,.4);color:#fff}
+    .nb.a{background:rgba(0,85,164,.18);border-color:rgba(0,85,164,.5);color:#4da6ff}
+    #lnav{position:fixed;left:12px;top:50%;transform:translateY(-50%);z-index:15;display:flex;flex-direction:column;gap:3px}
+    .ni{display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;border:1px solid rgba(255,255,255,.05);border-radius:5px;background:rgba(0,0,0,.3);backdrop-filter:blur(6px);min-width:140px;transition:all .3s}
+    .ni:hover{border-color:rgba(255,255,255,.12)}.ni.a{border-color:currentColor;background:rgba(0,85,164,.1)}
+    .nd{width:7px;height:7px;border-radius:50%;flex-shrink:0}.ni.a .nd{width:9px;height:9px;box-shadow:0 0 8px currentColor}
+    .nl{font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.2);font-weight:500;white-space:nowrap}.ni.a .nl{color:inherit;font-weight:700}
+    #rc{position:fixed;right:12px;top:50%;transform:translateY(-50%);z-index:15;display:flex;flex-direction:column;gap:3px;padding:6px;background:rgba(0,0,0,.35);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.05);border-radius:8px}
+    .cb{width:32px;height:32px;border-radius:5px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);color:#778;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;font-family:inherit}
+    .cb:hover{background:rgba(0,85,164,.12);border-color:rgba(0,85,164,.35);color:#fff}
+    .cb.a{background:rgba(0,85,164,.18);border-color:rgba(0,85,164,.45);color:#4da6ff}
+    .cd{width:20px;height:1px;background:rgba(255,255,255,.06);margin:1px auto}
+    #info{position:fixed;left:12px;bottom:16px;z-index:15;pointer-events:none;opacity:0;transform:translateY(10px);transition:all .5s;max-width:280px}
+    #info.v{opacity:1;transform:translateY(0)}
+  </style>
 </head>
 <body>
-  <div id="loader">
-    <h2>cycle<b>WASH</b></h2>
-    <h2 style="font-size:0.9rem;margin-top:4px;color:rgba(255,255,255,0.4);">Station Basic</h2>
-    <div class="bar"><div class="fill" id="fill"></div></div>
-    <div class="txt" id="ltxt">Initializing 3D engine...</div>
-  </div>
+<div id="loader"><h1>cycle<span>WASH</span></h1><div style="font-size:.85rem;font-weight:300;color:rgba(255,255,255,.4);margin-top:4px;letter-spacing:.3em">STATION BASIC</div><div class="bar"><div class="fill" id="fill"></div></div><div class="txt" id="ltxt">Loading 3D model...</div></div>
+<div id="top"><div class="brand">cycle<b>WASH</b> Station Basic</div><div class="nav"><button class="nb a" id="bov">Overview</button><button class="nb" id="bco">Collapse</button><button class="nb" id="bex">Explode</button></div></div>
+<div id="lnav"></div>
+<div id="rc"><button class="cb" id="bp">+</button><button class="cb" id="bm">−</button><div class="cd"></div><button class="cb a" id="bar">↻</button><button class="cb" id="bsr">■</button><button class="cb" id="bfr">⚙</button><div class="cd"></div><button class="cb" id="brs">↺</button></div>
+<div id="info"><div id="inum" style="font-size:.5rem;letter-spacing:.3em;font-weight:500"></div><div id="iname" style="font-size:1.5rem;font-weight:800;margin-top:4px;text-shadow:0 2px 10px rgba(0,0,0,.5)"></div><div id="isub" style="font-size:.7rem;font-weight:300;color:rgba(255,255,255,.55);margin-top:4px"></div></div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 
-  <div id="topbar">
-    <div class="brand">cycle<b>WASH</b> Station Basic</div>
-    <div class="nav">
-      <button class="btn active" id="b-ov">Overview</button>
-      <button class="btn" id="b-co">Collapse</button>
-      <button class="btn" id="b-ex">Explode</button>
-    </div>
-  </div>
+const ASMS=[
+  {name:"METAL FRAME",sub:"Brushed Stainless Steel",color:"#D0D4DA",i:[0,220]},
+  {name:"PROTECTIVE COVERS",sub:"Matte Black ABS",color:"#2A2A30",i:[220,225]},
+  {name:"MOUNTING SYSTEM",sub:"Stainless Steel Feet",color:"#B8BCC4",i:[225,237]},
+  {name:"WHEEL AXLE",sub:"Grey Rubber & Steel",color:"#6E6E72",i:[237,278]},
+  {name:"WHEEL TURNING UNIT",sub:"Motorized Drive",color:"#0055A4",i:[278,392]},
+  {name:"OIL SEPARATOR",sub:"Metallic Blue Steel",color:"#2277CC",i:[392,399]}
+];
 
-  <div id="leftnav"></div>
+// Scene
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x0a0e1a);
+const camera=new THREE.PerspectiveCamera(35,innerWidth/innerHeight,1,15000);
+camera.position.set(3000,1800,3000);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=2.2;
+document.body.appendChild(renderer.domElement);
 
-  <div id="controls">
-    <button class="cb" id="b-plus" title="Expand">+</button>
-    <button class="cb" id="b-minus" title="Collapse">−</button>
-    <div class="cd"></div>
-    <button class="cb active" id="b-auto" title="Auto Rotate">↻</button>
-    <button class="cb" id="b-stop" title="Stop">■</button>
-    <button class="cb" id="b-free" title="Free 3D">⚙</button>
-    <div class="cd"></div>
-    <button class="cb" id="b-reset" title="Reset">↺</button>
-  </div>
+scene.add(new THREE.AmbientLight(0x8899bb,1.5));
+scene.add(new THREE.HemisphereLight(0xddeeff,0x445566,1.0));
+const kl=new THREE.DirectionalLight(0xfff5e6,3.5);kl.position.set(2000,3000,1500);kl.castShadow=true;scene.add(kl);
+scene.add(Object.assign(new THREE.DirectionalLight(0xaaccff,1.8),{position:new THREE.Vector3(-1500,1000,-1000)}));
+scene.add(Object.assign(new THREE.DirectionalLight(0xffffff,1.2),{position:new THREE.Vector3(0,500,-2500)}));
+scene.add(Object.assign(new THREE.DirectionalLight(0x0055A4,0.8),{position:new THREE.Vector3(-500,1500,-2000)}));
+scene.add(Object.assign(new THREE.DirectionalLight(0xeeeeff,0.5),{position:new THREE.Vector3(0,4000,0)}));
+const spot=new THREE.SpotLight(0xffffff,0,0,Math.PI/5,0.6,1);spot.position.set(0,3000,0);scene.add(spot);scene.add(spot.target);
+const gnd=new THREE.Mesh(new THREE.PlaneGeometry(12000,12000),new THREE.MeshStandardMaterial({color:0x151a2a,metalness:0.7,roughness:0.3}));
+gnd.rotation.x=-Math.PI/2;gnd.position.y=-500;gnd.receiveShadow=true;scene.add(gnd);
 
-  <div id="info">
-    <div id="i-num" style="font-size:0.5rem;letter-spacing:0.3em;font-weight:500;"></div>
-    <div id="i-name" style="font-size:1.5rem;font-weight:800;margin-top:4px;text-shadow:0 2px 10px rgba(0,0,0,0.5);"></div>
-    <div id="i-sub" style="font-size:0.7rem;font-weight:300;color:rgba(255,255,255,0.55);margin-top:4px;"></div>
-  </div>
+const ctrl=new OrbitControls(camera,renderer.domElement);
+ctrl.enableDamping=true;ctrl.dampingFactor=0.05;ctrl.autoRotate=true;ctrl.autoRotateSpeed=0.4;ctrl.minDistance=800;ctrl.maxDistance=5500;
 
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+// Load data
+const manifest=await(await fetch('./manifest.json')).json();
+let cx=0,cy=0,cz=0;
+for(const p of manifest){cx+=p.center[0];cy+=p.center[1];cz+=p.center[2];}
+const mcx=cx/manifest.length,mcy=cy/manifest.length,mcz=cz/manifest.length;
 
-    const ASMS = [
-      { key:"BG_Metall-Teile", name:"METAL FRAME", subtitle:"Brushed Stainless Steel", color:"#D0D4DA", indices:[0,220] },
-      { key:"BG_Kunststoff", name:"PROTECTIVE COVERS", subtitle:"Matte Black ABS", color:"#2A2A30", indices:[220,225] },
-      { key:"Stellfuss", name:"MOUNTING SYSTEM", subtitle:"Stainless Steel Feet", color:"#B8BCC4", indices:[225,237] },
-      { key:"BG_Achse", name:"WHEEL AXLE", subtitle:"Grey Rubber & Steel", color:"#6E6E72", indices:[237,278] },
-      { key:"Raddreheinheit", name:"WHEEL TURNING UNIT", subtitle:"Motorized Drive", color:"#0055A4", indices:[278,392] },
-      { key:"Oelabscheider", name:"OIL SEPARATOR", subtitle:"Metallic Blue Steel", color:"#2277CC", indices:[392,399] },
-    ];
+const partAsm=new Array(manifest.length).fill(-1);
+for(let a=0;a<ASMS.length;a++){const[s,e]=ASMS[a].i;for(let p=s;p<e;p++)partAsm[p]=a;}
+const asmData=ASMS.map(a=>({...a,meshes:[],center:new THREE.Vector3(),colorObj:new THREE.Color(a.color)}));
+const allParts=[];
 
-    // Scene
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0e1a);
-    const camera = new THREE.PerspectiveCamera(35, innerWidth/innerHeight, 1, 15000);
-    camera.position.set(3000, 1800, 3000);
-    const renderer = new THREE.WebGLRenderer({ antialias:true });
-    renderer.setSize(innerWidth, innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 2.2;
-    document.body.appendChild(renderer.domElement);
+// State
+let explodeAmt=0,targetExp=0,dimAmt=0,targetDim=0,activeAsm=-1,expLevel=0,manual=false;
+const lerp=(a,b,t)=>a+(b-a)*Math.min(1,t);
 
-    // Lights
-    scene.add(new THREE.AmbientLight(0x8899bb, 1.5));
-    scene.add(new THREE.HemisphereLight(0xddeeff, 0x445566, 1.0));
-    const kl = new THREE.DirectionalLight(0xfff5e6, 3.5); kl.position.set(2000,3000,1500); kl.castShadow=true; scene.add(kl);
-    scene.add(Object.assign(new THREE.DirectionalLight(0xaaccff,1.8),{position:new THREE.Vector3(-1500,1000,-1000)}));
-    scene.add(Object.assign(new THREE.DirectionalLight(0xffffff,1.2),{position:new THREE.Vector3(0,500,-2500)}));
-    scene.add(Object.assign(new THREE.DirectionalLight(0x0055A4,0.8),{position:new THREE.Vector3(-500,1500,-2000)}));
-    scene.add(Object.assign(new THREE.DirectionalLight(0xeeeeff,0.5),{position:new THREE.Vector3(0,4000,0)}));
-    const spot = new THREE.SpotLight(0xffffff,0,0,Math.PI/5,0.6,1); spot.position.set(0,3000,0); scene.add(spot); scene.add(spot.target);
+// Start render loop immediately
+const clock=new THREE.Clock();
+(function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),0.05);
+  explodeAmt=lerp(explodeAmt,targetExp,dt*3);
+  dimAmt=lerp(dimAmt,targetDim,dt*4);
+  const scale=manual?Math.max(expLevel,1):1;
+  for(const mesh of allParts){
+    const u=mesh.userData,isH=(u.ai===activeAsm);
+    let pe;if(activeAsm>=0&&dimAmt>0.1){pe=isH?explodeAmt*(1-dimAmt):explodeAmt;}else{pe=explodeAmt;}
+    u._ce=lerp(u._ce,pe,dt*4);
+    const ed=u.dist*u._ce*scale;
+    mesh.position.set(u.dir.x*ed,u.dir.y*ed,u.dir.z*ed);
+    const m=mesh.material;
+    if(dimAmt>0.05&&activeAsm>=0){
+      if(isH){const hc=asmData[activeAsm].colorObj;m.color.lerp(hc,dt*6);m.emissive.copy(hc).multiplyScalar(0.1*dimAmt);m.transparent=false;m.opacity=1;}
+      else{m.color.lerp(new THREE.Color(0x181820),dt*5);m.emissive.setHex(0);m.transparent=true;m.opacity=lerp(m.opacity,1-dimAmt*0.7,dt*4);}
+    }else{m.color.lerp(u.bc,dt*3);m.emissive.lerp(new THREE.Color(0),dt*5);m.transparent=false;m.opacity=1;}
+  }
+  if(activeAsm>=0&&dimAmt>0.3){const ac=asmData[activeAsm].center;spot.intensity=lerp(spot.intensity,4*dimAmt,dt*3);spot.position.lerp(new THREE.Vector3(ac.x*.5,3000,ac.z*.5),dt*2);spot.target.position.lerp(new THREE.Vector3(ac.x*.5,ac.y*.5,ac.z*.5),dt*2);}
+  else{spot.intensity=lerp(spot.intensity,0,dt*3);}
+  ctrl.update();
+  renderer.render(scene,camera);
+})();
 
-    // Ground
-    const gnd = new THREE.Mesh(new THREE.PlaneGeometry(12000,12000), new THREE.MeshStandardMaterial({color:0x151a2a,metalness:0.7,roughness:0.3}));
-    gnd.rotation.x=-Math.PI/2; gnd.position.y=-500; gnd.receiveShadow=true; scene.add(gnd);
+// Load parts sequentially (proven working)
+const stl=new STLLoader();
+let loaded=0;
+const fill=document.getElementById('fill'),ltxt=document.getElementById('ltxt');
 
-    // Controls
-    const ctrl = new OrbitControls(camera, renderer.domElement);
-    ctrl.enableDamping=true; ctrl.dampingFactor=0.05; ctrl.autoRotate=true; ctrl.autoRotateSpeed=0.4; ctrl.minDistance=800; ctrl.maxDistance=5500;
+function loadPart(idx){
+  if(idx>=manifest.length){
+    for(const ad of asmData){if(!ad.meshes.length)continue;const c=new THREE.Vector3();for(const m of ad.meshes)c.add(m.userData.oc);c.divideScalar(ad.meshes.length);ad.center.copy(c);}
+    setTimeout(()=>document.getElementById('loader').classList.add('hidden'),500);
+    return;
+  }
+  const p=manifest[idx];
+  stl.load('./parts/'+p.file, geo=>{
+    geo.computeVertexNormals(); geo.translate(-mcx,-mcz,mcy);
+    const ai=partAsm[idx];
+    const col=ai>=0?new THREE.Color(ASMS[ai].color):new THREE.Color(0xb0b8c4);
+    const hsl={};col.getHSL(hsl);
+    const bc=new THREE.Color().setHSL(hsl.h,hsl.s*0.4,0.6);
+    const mat=new THREE.MeshStandardMaterial({color:bc,metalness:0.45,roughness:0.35,side:THREE.DoubleSide});
+    const mesh=new THREE.Mesh(geo,mat);mesh.castShadow=true;mesh.receiveShadow=true;
+    const oc=new THREE.Vector3(p.center[0]-mcx,p.center[2]-mcz,-(p.center[1]-mcy));
+    const dir=oc.clone();if(dir.length()<1)dir.set(0,1,0);dir.normalize();
+    const vol=p.bbox[0]*p.bbox[1]*p.bbox[2];
+    let dist;if(vol>50000000)dist=250+Math.random()*120;else if(vol>1000000)dist=400+Math.random()*300;else dist=600+Math.random()*500;
+    mesh.userData={ai,dir,dist,oc,bc:bc.clone(),_ce:0};
+    scene.add(mesh);allParts.push(mesh);
+    if(ai>=0)asmData[ai].meshes.push(mesh);
+    loaded++;fill.style.width=(loaded/manifest.length*100)+'%';ltxt.textContent=loaded+'/'+manifest.length;
+    loadPart(idx+1);
+  },undefined,()=>{loaded++;loadPart(idx+1);});
+}
+loadPart(0);
 
-    // Load
-    const stl = new STLLoader();
-    const res = await fetch('./manifest.json');
-    const manifest = (await res.json()).filter(p => p.fileSize > 2000);
-    const asmRes = await fetch('./assemblies.json');
-    const asmJson = await asmRes.json();
+// Left nav
+const lnav=document.getElementById('lnav');
+ASMS.forEach((a,i)=>{
+  const d=document.createElement('div');d.className='ni';d.style.color=a.color;
+  d.innerHTML=`<div class="nd" style="background:${a.color}"></div><div class="nl">${a.name}</div>`;
+  d.onclick=()=>selAsm(i);lnav.appendChild(d);
+});
 
-    let cx=0,cy=0,cz=0;
-    for(const p of manifest){cx+=p.center[0];cy+=p.center[1];cz+=p.center[2];}
-    const mc = new THREE.Vector3(cx/manifest.length, cy/manifest.length, cz/manifest.length);
+function selAsm(i){
+  if(activeAsm===i){activeAsm=-1;targetDim=0;document.getElementById('info').classList.remove('v');}
+  else{activeAsm=i;targetExp=1;targetDim=1;if(expLevel<.5)expLevel=1;manual=true;
+    document.getElementById('inum').textContent=`0${i+1} / 0${ASMS.length}`;document.getElementById('inum').style.color=ASMS[i].color;
+    document.getElementById('iname').textContent=ASMS[i].name;document.getElementById('iname').style.color=ASMS[i].color;
+    document.getElementById('isub').textContent=ASMS[i].sub;document.getElementById('info').classList.add('v');}
+  lnav.querySelectorAll('.ni').forEach((n,j)=>n.classList.toggle('a',j===activeAsm));
+}
 
-    const partAsm = new Array(manifest.length).fill(-1);
-    for(let ai=0;ai<ASMS.length;ai++){const[s,e]=ASMS[ai].indices;for(let pi=s;pi<e;pi++)partAsm[pi]=ai;}
+// Top buttons
+function setNb(id){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('a'));document.getElementById(id)?.classList.add('a');}
+document.getElementById('bov').onclick=()=>{manual=false;expLevel=0;targetExp=0;targetDim=0;activeAsm=-1;document.getElementById('info').classList.remove('v');lnav.querySelectorAll('.ni').forEach(n=>n.classList.remove('a'));setNb('bov');};
+document.getElementById('bco').onclick=()=>{manual=true;targetExp=0;expLevel=0;targetDim=0;activeAsm=-1;document.getElementById('info').classList.remove('v');lnav.querySelectorAll('.ni').forEach(n=>n.classList.remove('a'));setNb('bco');};
+document.getElementById('bex').onclick=()=>{manual=true;targetExp=1;expLevel=1;targetDim=0;activeAsm=-1;document.getElementById('info').classList.remove('v');lnav.querySelectorAll('.ni').forEach(n=>n.classList.remove('a'));setNb('bex');};
 
-    const asmData = ASMS.map(a=>({...a, meshes:[], center:new THREE.Vector3(), colorObj:new THREE.Color(a.color)}));
-    const allParts = [];
-    let loaded = 0;
-    const fill = document.getElementById('fill');
-    const ltxt = document.getElementById('ltxt');
+// +/- controls
+document.getElementById('bp').onclick=()=>{expLevel=Math.min(3,expLevel+.25);manual=true;targetExp=Math.min(expLevel,1);};
+document.getElementById('bm').onclick=()=>{expLevel=Math.max(0,expLevel-.25);manual=true;targetExp=Math.min(expLevel,1);};
 
-    // Load parts sequentially — proven to work
-    function loadPart(idx) {
-      if (idx >= manifest.length) {
-        // All done — compute assembly centers and hide loader
-        for (const ad of asmData) {
-          if (!ad.meshes.length) continue;
-          const c = new THREE.Vector3();
-          for (const m of ad.meshes) c.add(m.userData.origCenter);
-          c.divideScalar(ad.meshes.length);
-          ad.center.copy(c);
-        }
-        setTimeout(() => document.getElementById('loader').classList.add('hidden'), 500);
-        return;
-      }
-      const p = manifest[idx];
-      stl.load('./parts/' + p.file, geo => {
-        geo.computeVertexNormals();
-        const ai = partAsm[idx];
-        const col = ai >= 0 ? new THREE.Color(ASMS[ai].color) : new THREE.Color(0xb0b8c4);
-        const hsl = {}; col.getHSL(hsl);
-        const bc = new THREE.Color().setHSL(hsl.h, hsl.s * 0.4, 0.6);
-        const mat = new THREE.MeshStandardMaterial({ color: bc, metalness: 0.45, roughness: 0.35, side: THREE.DoubleSide });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.castShadow = true; mesh.receiveShadow = true;
-        const oc = new THREE.Vector3(p.center[0] - mc.x, p.center[2] - mc.z, -(p.center[1] - mc.y));
-        geo.translate(-mc.x, -mc.z, mc.y);
-        const dir = oc.clone(); if (dir.length() < 1) dir.set(0, 1, 0); dir.normalize();
-        const vol = p.bbox[0] * p.bbox[1] * p.bbox[2];
-        let dist; if (vol > 50000000) dist = 250 + Math.random() * 120; else if (vol > 1000000) dist = 400 + Math.random() * 300; else dist = 600 + Math.random() * 500;
-        mesh.userData = { idx, asmIdx: ai, explodeDir: dir, explodeDist: dist, origCenter: oc, baseColor: bc.clone(), baseMetal: 0.45, baseRough: 0.35, _ce: 0 };
-        scene.add(mesh); allParts.push(mesh);
-        if (ai >= 0) asmData[ai].meshes.push(mesh);
-        loaded++;
-        fill.style.width = (loaded / manifest.length * 100) + '%';
-        ltxt.textContent = loaded + ' / ' + manifest.length;
-        loadPart(idx + 1);
-      }, undefined, () => { loaded++; loadPart(idx + 1); });
-    }
-    loadPart(0);
+// Rotate controls
+function setRb(el){document.querySelectorAll('#rc .cb').forEach(b=>b.classList.remove('a'));el.classList.add('a');}
+document.getElementById('bar').onclick=function(){ctrl.autoRotate=true;ctrl.autoRotateSpeed=0.4;setRb(this);};
+document.getElementById('bsr').onclick=function(){ctrl.autoRotate=false;setRb(this);};
+document.getElementById('bfr').onclick=function(){ctrl.autoRotate=false;setRb(this);};
+document.getElementById('brs').onclick=()=>{camera.position.set(3000,1800,3000);ctrl.target.set(0,0,0);ctrl.autoRotate=true;manual=false;expLevel=0;targetExp=0;targetDim=0;activeAsm=-1;document.getElementById('info').classList.remove('v');lnav.querySelectorAll('.ni').forEach(n=>n.classList.remove('a'));setNb('bov');setRb(document.getElementById('bar'));};
 
-    // Left nav
-    const leftnav = document.getElementById('leftnav');
-    ASMS.forEach((a,i)=>{
-      const d=document.createElement('div'); d.className='ni'; d.style.color=a.color; d.dataset.i=i;
-      d.innerHTML=`<div class="nd" style="background:${a.color}"></div><div class="nl">${a.name}</div>`;
-      d.onclick=()=>selectAsm(i);
-      leftnav.appendChild(d);
-    });
-
-    // State
-    let explodeAmount=0, targetExplode=0, dimAmount=0, targetDim=0, activeAsm=-1, explodeLevel=0, manualMode=false;
-    const hlColor = new THREE.Color();
-    const lerp=(a,b,t)=>a+(b-a)*Math.min(1,t);
-
-    function selectAsm(i){
-      if(activeAsm===i){activeAsm=-1;targetDim=0;document.getElementById('info').classList.remove('visible');}
-      else{activeAsm=i;targetExplode=1;targetDim=1;if(explodeLevel<0.5)explodeLevel=1;manualMode=true;
-        const a=ASMS[i]; document.getElementById('i-num').textContent=`0${i+1} / 0${ASMS.length}`; document.getElementById('i-num').style.color=a.color;
-        document.getElementById('i-name').textContent=a.name; document.getElementById('i-name').style.color=a.color;
-        document.getElementById('i-sub').textContent=a.subtitle; document.getElementById('info').classList.add('visible');
-      }
-      leftnav.querySelectorAll('.ni').forEach((n,j)=>n.classList.toggle('active',j===activeAsm));
-    }
-
-    function setBtn(id){document.querySelectorAll('.nav .btn').forEach(b=>b.classList.remove('active'));document.getElementById(id)?.classList.add('active');}
-
-    document.getElementById('b-ov').onclick=()=>{manualMode=false;explodeLevel=0;targetExplode=0;targetDim=0;activeAsm=-1;document.getElementById('info').classList.remove('visible');leftnav.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));setBtn('b-ov');};
-    document.getElementById('b-co').onclick=()=>{manualMode=true;targetExplode=0;explodeLevel=0;targetDim=0;activeAsm=-1;document.getElementById('info').classList.remove('visible');leftnav.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));setBtn('b-co');};
-    document.getElementById('b-ex').onclick=()=>{manualMode=true;targetExplode=1;explodeLevel=1;targetDim=0;activeAsm=-1;document.getElementById('info').classList.remove('visible');leftnav.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));setBtn('b-ex');};
-    document.getElementById('b-plus').onclick=()=>{explodeLevel=Math.min(3,explodeLevel+0.25);manualMode=true;targetExplode=Math.min(explodeLevel,1);};
-    document.getElementById('b-minus').onclick=()=>{explodeLevel=Math.max(0,explodeLevel-0.25);manualMode=true;targetExplode=Math.min(explodeLevel,1);};
-    document.getElementById('b-auto').onclick=()=>{ctrl.autoRotate=true;ctrl.autoRotateSpeed=0.4;document.querySelectorAll('#controls .cb').forEach(b=>b.classList.remove('active'));document.getElementById('b-auto').classList.add('active');};
-    document.getElementById('b-stop').onclick=()=>{ctrl.autoRotate=false;document.querySelectorAll('#controls .cb').forEach(b=>b.classList.remove('active'));document.getElementById('b-stop').classList.add('active');};
-    document.getElementById('b-free').onclick=()=>{ctrl.autoRotate=false;document.querySelectorAll('#controls .cb').forEach(b=>b.classList.remove('active'));document.getElementById('b-free').classList.add('active');};
-    document.getElementById('b-reset').onclick=()=>{camera.position.set(3000,1800,3000);ctrl.target.set(0,0,0);ctrl.autoRotate=true;manualMode=false;explodeLevel=0;targetExplode=0;targetDim=0;activeAsm=-1;document.getElementById('info').classList.remove('visible');leftnav.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));setBtn('b-ov');document.querySelectorAll('#controls .cb').forEach(b=>b.classList.remove('active'));document.getElementById('b-auto').classList.add('active');};
-
-    // Resize
-    addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-
-    // Render
-    const clock = new THREE.Clock();
-    (function animate(){
-      requestAnimationFrame(animate);
-      const dt=Math.min(clock.getDelta(),0.05);
-      explodeAmount=lerp(explodeAmount,targetExplode,dt*3);
-      dimAmount=lerp(dimAmount,targetDim,dt*4);
-      const scale=manualMode?Math.max(explodeLevel,1):1;
-
-      for(const mesh of allParts){
-        const ud=mesh.userData, isHl=(ud.asmIdx===activeAsm);
-        let pe; if(activeAsm>=0&&dimAmount>0.1){pe=isHl?explodeAmount*(1-dimAmount):explodeAmount;}else{pe=explodeAmount;}
-        ud._ce=lerp(ud._ce,pe,dt*4);
-        const ed=ud.explodeDist*ud._ce*scale;
-        mesh.position.set(ud.explodeDir.x*ed, ud.explodeDir.y*ed, ud.explodeDir.z*ed);
-        const mat=mesh.material;
-        if(dimAmount>0.05&&activeAsm>=0){
-          if(isHl){const hc=asmData[activeAsm].colorObj;mat.color.lerp(hc,dt*6);mat.emissive.copy(hc).multiplyScalar(0.1*dimAmount);mat.transparent=false;mat.opacity=1;}
-          else{mat.color.lerp(new THREE.Color(0x181820),dt*5);mat.emissive.setHex(0);mat.transparent=true;mat.opacity=lerp(mat.opacity,1-dimAmount*0.7,dt*4);}
-        }else{mat.color.lerp(ud.baseColor,dt*3);mat.emissive.lerp(new THREE.Color(0),dt*5);mat.metalness=lerp(mat.metalness,ud.baseMetal,dt*3);mat.roughness=lerp(mat.roughness,ud.baseRough,dt*3);mat.transparent=false;mat.opacity=1;}
-      }
-
-      if(activeAsm>=0&&dimAmount>0.3){const ac=asmData[activeAsm].center;spot.intensity=lerp(spot.intensity,4*dimAmount,dt*3);spot.position.lerp(new THREE.Vector3(ac.x*0.5,3000,ac.z*0.5),dt*2);spot.target.position.lerp(new THREE.Vector3(ac.x*0.5,ac.y*0.5,ac.z*0.5),dt*2);}
-      else{spot.intensity=lerp(spot.intensity,0,dt*3);}
-
-      ctrl.update();
-      renderer.render(scene,camera);
-    })();
-  </script>
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+</script>
 </body>
 </html>
