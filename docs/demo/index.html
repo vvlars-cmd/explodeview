@@ -368,6 +368,20 @@
       border-bottom: 1px solid rgba(255,255,255,0.06);
       transition: transform 0.4s ease;
     }
+    /* ViewCube */
+    .cface {
+      position: absolute; width: 90px; height: 90px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 600; letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.7); text-transform: uppercase;
+      background: rgba(100,120,140,0.4);
+      border: 1px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(4px);
+      backface-visibility: visible;
+      transition: background 0.2s;
+    }
+    .cface:hover { background: rgba(0,85,164,0.5); color: #fff; }
+
     .top-logo { display: none; }
     .logo-brand { font-weight: 200; }
     .logo-product { font-weight: 700; color: var(--yellow); }
@@ -750,6 +764,18 @@
   </header>
 
   <!-- Mobile title bar (shows full product name) -->
+  <!-- ViewCube (top-right) -->
+  <div id="viewcube" style="position:fixed;top:60px;right:14px;z-index:55;width:90px;height:90px;perspective:200px;cursor:pointer;">
+    <div id="cube3d" style="width:90px;height:90px;position:relative;transform-style:preserve-3d;transform:rotateX(-25deg) rotateY(45deg);transition:transform 0.5s ease;">
+      <div class="cface" data-view="front" style="transform:rotateY(0deg) translateZ(45px);">FRONT</div>
+      <div class="cface" data-view="back" style="transform:rotateY(180deg) translateZ(45px);">BACK</div>
+      <div class="cface" data-view="right" style="transform:rotateY(90deg) translateZ(45px);">RIGHT</div>
+      <div class="cface" data-view="left" style="transform:rotateY(-90deg) translateZ(45px);">LEFT</div>
+      <div class="cface" data-view="top" style="transform:rotateX(90deg) translateZ(45px);">TOP</div>
+      <div class="cface" data-view="bottom" style="transform:rotateX(-90deg) translateZ(45px);">BOTTOM</div>
+    </div>
+  </div>
+
   <!-- Product title below nav -->
   <div id="product-title" style="position:fixed;top:52px;left:0;right:0;text-align:center;z-index:59;padding:6px 0;font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);font-weight:400;background:rgba(0,0,0,0.3);backdrop-filter:blur(8px);">
     <span style="font-weight:200">cycleWASH</span> <span style="font-weight:700;color:#FFD100">Station Basic</span>
@@ -799,6 +825,9 @@
     <input type="range" id="ctrl-fov" min="15" max="90" value="35" style="width:100%;margin:4px 0 10px;accent-color:#0055A4;">
 
     <div style="font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin:12px 0 8px;">Scene</div>
+
+    <label style="font-size:0.55rem;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;">Vertical Position</label>
+    <input type="range" id="ctrl-vpos" min="-1500" max="500" value="0" style="width:100%;margin:4px 0 10px;accent-color:#0055A4;">
 
     <label style="font-size:0.55rem;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;">Env Rotation</label>
     <input type="range" id="ctrl-env-rotate" min="0" max="360" value="0" style="width:100%;margin:4px 0 10px;accent-color:#0055A4;">
@@ -905,6 +934,6 @@
       }
     });
   </script>
-  <script type="module" src="./app.js?v=28"></script>
+  <script type="module" src="./app.js?v=29"></script>
 </body>
 </html>

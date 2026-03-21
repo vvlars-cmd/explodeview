@@ -644,7 +644,7 @@ function animate() {
     const scale = manualMode ? Math.max(explodeLevel, 1) : 1;
     const ed = ud.explodeDist * ud._currentExplode * scale;
     mesh.position.x = ud.explodeDir.x * ed;
-    mesh.position.y = ud.explodeDir.y * ed;
+    mesh.position.y = ud.explodeDir.y * ed + modelYOffset;
     mesh.position.z = ud.explodeDir.z * ed;
 
     // Store final position for explosion lines
@@ -736,6 +736,7 @@ function animate() {
   pGeo.attributes.position.needsUpdate = true;
 
   controls.update();
+  updateViewCube();
   renderer.render(scene, camera);
 }
 
@@ -964,6 +965,39 @@ function updateBottomControls() {
 }
 window.addEventListener('scroll', updateBottomControls, { passive: true });
 
+// ─── ViewCube ───
+const viewPositions = {
+  front:  { pos: [0, 0, 3000], target: [0, 0, 0] },
+  back:   { pos: [0, 0, -3000], target: [0, 0, 0] },
+  right:  { pos: [3000, 0, 0], target: [0, 0, 0] },
+  left:   { pos: [-3000, 0, 0], target: [0, 0, 0] },
+  top:    { pos: [0, 3000, 0], target: [0, 0, 0] },
+  bottom: { pos: [0, -3000, 0], target: [0, 0, 0] },
+};
+
+document.querySelectorAll('.cface').forEach(face => {
+  face.addEventListener('click', () => {
+    const view = viewPositions[face.dataset.view];
+    if (!view) return;
+    cameraLocked = false;
+    controls.autoRotate = false;
+    camera.position.set(...view.pos);
+    controls.target.set(...view.target);
+  });
+});
+
+// Sync ViewCube rotation with camera
+function updateViewCube() {
+  const cube = document.getElementById('cube3d');
+  if (!cube) return;
+  // Get camera direction angles
+  const dir = new THREE.Vector3();
+  camera.getWorldDirection(dir);
+  const rx = Math.asin(-dir.y) * (180 / Math.PI);
+  const ry = Math.atan2(dir.x, dir.z) * (180 / Math.PI);
+  cube.style.transform = `rotateX(${rx}deg) rotateY(${-ry}deg)`;
+}
+
 // ─── Wireframe Toggle ───
 let wireframeOn = false;
 document.getElementById('btn-wireframe').addEventListener('click', () => {
@@ -1011,6 +1045,12 @@ document.getElementById('ctrl-scale').addEventListener('input', (e) => {
 document.getElementById('ctrl-fov').addEventListener('input', (e) => {
   camera.fov = parseInt(e.target.value);
   camera.updateProjectionMatrix();
+});
+
+// Vertical position — move model up/down to sit on ground
+let modelYOffset = 0;
+document.getElementById('ctrl-vpos').addEventListener('input', (e) => {
+  modelYOffset = parseInt(e.target.value);
 });
 
 // Environment rotation
