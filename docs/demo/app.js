@@ -10,10 +10,15 @@ import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 //  CONFIGURATION — customize these values
 // ─────────────────────────────────────────────
 const CONFIG = window.EXPLODEVIEW_CONFIG || {
-  brand: 'cycleWASH',           // Brand name (first part of logo)
-  productName: 'Station Basic', // Product name (second part, shown bold)
+  brand: 'cycleWASH',
+  productName: 'Station Basic',
   tagline: 'Engineered in Germany. 399 precision components. One seamless cleaning experience.',
   badge: 'Professional Bike Washing',
+  // Custom background images (shown in settings alongside built-in presets)
+  backgrounds: [
+    // { name: 'My Factory', url: '/images/factory.jpg' },
+    // { name: 'Showroom', url: '/images/showroom.jpg' },
+  ],
 };
 
 // Apply config to ALL text elements immediately
@@ -647,9 +652,11 @@ function animate() {
 
     const scale = manualMode ? Math.max(explodeLevel, 1) : 1;
     const ed = ud.explodeDist * ud._currentExplode * scale;
-    mesh.position.x = ud.explodeDir.x * ed;
-    mesh.position.y = ud.explodeDir.y * ed + modelYOffset;
-    mesh.position.z = ud.explodeDir.z * ed;
+    const px = ud.explodeDir.x * ed;
+    const py = ud.explodeDir.y * ed + modelYOffset;
+    const pz = ud.explodeDir.z * ed;
+    mesh.position.set(px, py, pz);
+    mesh.rotation.set(modelRotX, modelRotY, modelRotZ);
 
     // Store final position for explosion lines
     ud._finalPos = { x: mesh.position.x, y: mesh.position.y, z: mesh.position.z };
@@ -875,7 +882,7 @@ function hideOverview() {
   overviewVisible = false;
 }
 
-document.getElementById('btn-overview').addEventListener('click', (e) => {
+document.getElementById('btn-overview')?.addEventListener('click', (e) => {
   e.preventDefault();
   manualMode = false;
   explodeLevel = 0;
@@ -895,7 +902,7 @@ document.getElementById('btn-overview').addEventListener('click', (e) => {
   else showOverview();
 });
 
-document.getElementById('btn-collapse').addEventListener('click', (e) => {
+document.getElementById('btn-collapse')?.addEventListener('click', (e) => {
   e.preventDefault();
   hideOverview();
   manualMode = true;
@@ -907,7 +914,7 @@ document.getElementById('btn-collapse').addEventListener('click', (e) => {
   setTopLinkActive('btn-collapse');
 });
 
-document.getElementById('btn-explode').addEventListener('click', (e) => {
+document.getElementById('btn-explode')?.addEventListener('click', (e) => {
   e.preventDefault();
   hideOverview();
   manualMode = true;
@@ -1232,6 +1239,48 @@ document.querySelectorAll('.bg-btn').forEach(btn => {
     }
   });
 });
+
+// Model orientation (rotate all parts as a group)
+let modelRotX = 0, modelRotY = 0, modelRotZ = 0;
+const modelGroup = new THREE.Group();
+scene.add(modelGroup);
+
+document.getElementById('ctrl-rot-x')?.addEventListener('input', (e) => {
+  modelRotX = parseInt(e.target.value) * Math.PI / 180;
+});
+document.getElementById('ctrl-rot-y')?.addEventListener('input', (e) => {
+  modelRotY = parseInt(e.target.value) * Math.PI / 180;
+});
+document.getElementById('ctrl-rot-z')?.addEventListener('input', (e) => {
+  modelRotZ = parseInt(e.target.value) * Math.PI / 180;
+});
+
+// Custom backgrounds from CONFIG
+const customBgList = document.getElementById('custom-bg-list');
+if (customBgList && CONFIG.backgrounds && CONFIG.backgrounds.length > 0) {
+  CONFIG.backgrounds.forEach(bg => {
+    const btn = document.createElement('button');
+    btn.className = 'bg-btn';
+    btn.style.cssText = 'width:48px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,0.08);cursor:pointer;font-size:7px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.5);background-size:cover;background-position:center;';
+    btn.style.backgroundImage = `url(${bg.url})`;
+    btn.textContent = bg.name;
+    btn.title = bg.name;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.bg-btn').forEach(b => b.style.borderColor = 'rgba(255,255,255,0.08)');
+      btn.style.borderColor = '#0055A4';
+      // Load as background image texture
+      const loader = new THREE.TextureLoader();
+      loader.load(bg.url, (tex) => {
+        tex.mapping = THREE.EquirectangularReflectionMapping;
+        scene.background = tex;
+        ground.visible = false;
+      });
+    });
+    customBgList.appendChild(btn);
+  });
+} else if (customBgList) {
+  customBgList.innerHTML = '<div style="font-size:0.4rem;color:rgba(255,255,255,0.2);">Set CONFIG.backgrounds to add custom images</div>';
+}
 
 // Close settings when clicking outside
 document.addEventListener('click', (e) => {
