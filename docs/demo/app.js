@@ -47,7 +47,10 @@ const CONFIG = window.EXPLODEVIEW_CONFIG || {
 
   // Product title bar
   const prodTitle = document.getElementById('product-title');
-  if (prodTitle) prodTitle.innerHTML = `<span style="font-weight:200">${CONFIG.brand}</span> <span style="font-weight:700;color:#FFD100">${CONFIG.productName}</span>`;
+  if (prodTitle) {
+    const totalParts = ASSEMBLIES.reduce((sum, a) => sum + (a.indices[1] - a.indices[0]), 0);
+    prodTitle.innerHTML = `<span style="font-weight:200">${CONFIG.brand}</span> <span style="font-weight:700;color:#FFD100">${CONFIG.productName}</span><div id="product-stats" style="font-size:0.45rem;color:rgba(255,255,255,0.3);letter-spacing:0.15em;margin-top:1px;">${totalParts} Components &bull; ${ASSEMBLIES.length} Sub-Assemblies</div>`;
+  }
 })();
 
 // ─────────────────────────────────────────────
