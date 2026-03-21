@@ -688,9 +688,39 @@ function updateScrollState() {
 }
 
 // ─────────────────────────────────────────────
+//  EXPLOSION LINES
+// ─────────────────────────────────────────────
+const explosionLines = [];
+const lineMaterial = new THREE.LineDashedMaterial({
+  color: 0x335577,
+  dashSize: 8,
+  gapSize: 6,
+  transparent: true,
+  opacity: 0,
+  depthTest: false,
+});
+
+// Create a line for each part (origin → exploded position)
+function createExplosionLines() {
+  // Only create lines for every Nth part to avoid clutter
+  for (let i = 0; i < allParts.length; i += 3) {
+    const geo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, 0, 0),
+    ]);
+    const line = new THREE.Line(geo, lineMaterial.clone());
+    line.computeLineDistances();
+    line.userData.partIdx = i;
+    scene.add(line);
+    explosionLines.push(line);
+  }
+}
+
+// ─────────────────────────────────────────────
 //  RENDER LOOP
 // ─────────────────────────────────────────────
 const clock = new THREE.Clock();
+let linesCreated = false;
 
 function lerp(a, b, t) { return a + (b - a) * Math.min(1, t); }
 
@@ -733,6 +763,9 @@ function animate() {
     mesh.position.x = ud.explodeDir.x * ed;
     mesh.position.y = ud.explodeDir.y * ed;
     mesh.position.z = ud.explodeDir.z * ed;
+
+    // Store final position for explosion lines
+    ud._finalPos = { x: mesh.position.x, y: mesh.position.y, z: mesh.position.z };
 
     // Color
     const mat = mesh.material;
@@ -778,14 +811,59 @@ function animate() {
     spot.intensity = lerp(spot.intensity, 4 * dimAmount, delta * 3);
     spot.position.lerp(new THREE.Vector3(ac.x * 0.5, 3000, ac.z * 0.5), delta * 2);
     spot.target.position.lerp(new THREE.Vector3(ac.x * 0.5, ac.y * 0.5, ac.z * 0.5), delta * 2);
+
+    // Stop rotation and move to isometric view when assembly selected
+    controls.autoRotate = false;
+    const ac2 = asmData[activeAssembly].center;
+    const isoDist = 2500;
+    // Isometric angle: 45° horizontal, 35° vertical
+    const isoPos = new THREE.Vector3(
+      ac2.x * 0.3 + isoDist * 0.707,
+      ac2.y * 0.3 + isoDist * 0.577,
+      ac2.z * 0.3 + isoDist * 0.707
+    );
+    camera.position.lerp(isoPos, delta * 2);
+    controls.target.lerp(new THREE.Vector3(ac2.x * 0.3, ac2.y * 0.3, ac2.z * 0.3), delta * 2);
   } else {
     spot.intensity = lerp(spot.intensity, 0, delta * 3);
+    // Resume rotation when no assembly selected
+    if (!manualMode) controls.autoRotate = true;
   }
 
   // Camera smooth follow — only when auto-rotating, not when user is dragging
   if (controls.autoRotate) {
     camera.position.lerp(camTargetPos, delta * 1.5);
     controls.target.lerp(camTargetLook, delta * 1.5);
+  }
+
+  // ─── Explosion lines ───
+  if (!linesCreated && allParts.length > 0) {
+    createExplosionLines();
+    linesCreated = true;
+  }
+
+  // Update explosion lines: show when exploded, hide when collapsed
+  const lineTargetOpacity = explodeAmount > 0.1 ? 0.3 * explodeAmount : 0;
+  for (const line of explosionLines) {
+    const pi = line.userData.partIdx;
+    if (pi >= allParts.length) continue;
+    const part = allParts[pi];
+    const ud = part.userData;
+    const fp = ud._finalPos;
+    if (!fp) continue;
+
+    // Update line geometry: from origin to exploded position
+    const positions = line.geometry.attributes.position.array;
+    // Start point: near origin (where part would be when assembled)
+    positions[0] = 0; positions[1] = 0; positions[2] = 0;
+    // End point: current exploded position
+    positions[3] = fp.x; positions[4] = fp.y; positions[5] = fp.z;
+    line.geometry.attributes.position.needsUpdate = true;
+    line.computeLineDistances();
+
+    // Fade opacity
+    line.material.opacity = lerp(line.material.opacity, lineTargetOpacity, delta * 3);
+    line.visible = line.material.opacity > 0.01;
   }
 
   // Rim light subtle animation
