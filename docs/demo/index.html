@@ -587,11 +587,12 @@
       /* Show toggle buttons on mobile */
       .mob-toggle { display: flex; }
 
-      /* Compact top nav */
-      #top-nav { height: 38px; padding: 0 8px; }
-      .top-logo { font-size: 0.6rem; letter-spacing: 0.12em; }
-      .top-links { gap: 2px; }
-      .top-link { padding: 3px 6px; font-size: 0.45rem; letter-spacing: 0.06em; }
+      /* Compact top nav — scrollable on mobile */
+      #top-nav { height: 38px; padding: 0 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .top-logo { font-size: 0.55rem; letter-spacing: 0.1em; white-space: nowrap; min-width: fit-content; }
+      .top-logo span { display: none; }
+      .top-links { gap: 2px; flex-shrink: 0; }
+      .top-link { padding: 3px 6px; font-size: 0.45rem; letter-spacing: 0.06em; white-space: nowrap; }
 
       /* Hide bottom controls on mobile — use toggle buttons instead */
       #bottom-controls { display: none; }
