@@ -755,24 +755,41 @@
   <!-- Top Navigation Bar -->
   <header id="top-nav">
     <div class="top-logo" id="top-logo">cycleWASH <span>Station Basic</span></div>
-    <nav class="top-links">
-      <a href="#" class="top-link" id="btn-collapse">Collapse</a>
-      <a href="#" class="top-link" id="btn-explode">Explode</a>
-    </nav>
+    <nav class="top-links"></nav>
     <div class="top-actions" id="top-actions"></div>
   </header>
 
   <!-- Mobile title bar (shows full product name) -->
   <!-- ViewCube (top-right) -->
-  <div id="viewcube" style="position:fixed;top:60px;right:14px;z-index:55;width:90px;height:90px;perspective:200px;cursor:pointer;">
-    <div id="cube3d" style="width:90px;height:90px;position:relative;transform-style:preserve-3d;transform:rotateX(-25deg) rotateY(45deg);transition:transform 0.5s ease;">
-      <div class="cface" data-view="front" style="transform:rotateY(0deg) translateZ(45px);">FRONT</div>
-      <div class="cface" data-view="back" style="transform:rotateY(180deg) translateZ(45px);">BACK</div>
-      <div class="cface" data-view="right" style="transform:rotateY(90deg) translateZ(45px);">RIGHT</div>
-      <div class="cface" data-view="left" style="transform:rotateY(-90deg) translateZ(45px);">LEFT</div>
-      <div class="cface" data-view="top" style="transform:rotateX(90deg) translateZ(45px);">TOP</div>
-      <div class="cface" data-view="bottom" style="transform:rotateX(-90deg) translateZ(45px);">BOTTOM</div>
+  <!-- ViewCube with axis lines (Fusion 360 style) -->
+  <div id="viewcube" style="position:fixed;top:58px;right:10px;z-index:55;width:110px;height:110px;">
+    <!-- Home button -->
+    <div id="vc-home" style="position:absolute;top:0;left:32px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.4);transition:color 0.2s;z-index:2;" title="Home View">&#8962;</div>
+    <!-- Cube container -->
+    <div style="position:absolute;top:16px;left:18px;width:65px;height:65px;perspective:160px;cursor:pointer;">
+      <div id="cube3d" style="width:65px;height:65px;position:relative;transform-style:preserve-3d;transform:rotateX(-25deg) rotateY(45deg);transition:transform 0.4s ease;">
+        <div class="cface" data-view="front" style="width:65px;height:65px;transform:rotateY(0deg) translateZ(32.5px);">FRONT</div>
+        <div class="cface" data-view="back" style="width:65px;height:65px;transform:rotateY(180deg) translateZ(32.5px);">BACK</div>
+        <div class="cface" data-view="right" style="width:65px;height:65px;transform:rotateY(90deg) translateZ(32.5px);">RIGHT</div>
+        <div class="cface" data-view="left" style="width:65px;height:65px;transform:rotateY(-90deg) translateZ(32.5px);">LEFT</div>
+        <div class="cface" data-view="top" style="width:65px;height:65px;transform:rotateX(90deg) translateZ(32.5px);">TOP</div>
+        <div class="cface" data-view="bottom" style="width:65px;height:65px;transform:rotateX(-90deg) translateZ(32.5px);">BTM</div>
+      </div>
     </div>
+    <!-- Axis lines + labels (rotate with cube via JS) -->
+    <svg id="vc-axis-svg" style="position:absolute;top:16px;left:18px;width:65px;height:65px;pointer-events:none;overflow:visible;">
+      <!-- X axis (red) -->
+      <line id="ax-line-x" x1="32" y1="32" x2="70" y2="32" stroke="#ff4444" stroke-width="1.5"/>
+      <text id="ax-label-x" x="74" y="36" fill="#ff4444" font-size="10" font-weight="700">X</text>
+      <!-- Y axis (green) -->
+      <line id="ax-line-y" x1="32" y1="32" x2="32" y2="-6" stroke="#44dd44" stroke-width="1.5"/>
+      <text id="ax-label-y" x="28" y="-10" fill="#44dd44" font-size="10" font-weight="700">Y</text>
+      <!-- Z axis (blue) -->
+      <line id="ax-line-z" x1="32" y1="32" x2="0" y2="58" stroke="#4488ff" stroke-width="1.5"/>
+      <text id="ax-label-z" x="-10" y="64" fill="#4488ff" font-size="10" font-weight="700">Z</text>
+    </svg>
+    <!-- Down arrow -->
+    <div style="position:absolute;bottom:0;right:0;font-size:10px;color:rgba(255,255,255,0.25);cursor:pointer;" id="vc-down" title="Bottom View">&#9662;</div>
   </div>
 
   <!-- Product title below nav -->
@@ -934,6 +951,6 @@
       }
     });
   </script>
-  <script type="module" src="./app.js?v=30"></script>
+  <script type="module" src="./app.js?v=31"></script>
 </body>
 </html>

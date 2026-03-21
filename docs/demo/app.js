@@ -989,16 +989,52 @@ document.querySelectorAll('.cface').forEach(face => {
   });
 });
 
-// Sync ViewCube rotation with camera
+// Home button on ViewCube
+document.getElementById('vc-home')?.addEventListener('click', () => {
+  cameraLocked = false; controls.autoRotate = false;
+  camera.position.set(3000, 1800, 3000); controls.target.set(0, 0, 0);
+});
+document.getElementById('vc-down')?.addEventListener('click', () => {
+  cameraLocked = false; controls.autoRotate = false;
+  camera.position.set(0, -3000, 0); controls.target.set(0, 0, 0);
+});
+
+// Sync ViewCube + axis lines rotation with camera
 function updateViewCube() {
   const cube = document.getElementById('cube3d');
   if (!cube) return;
-  // Get camera direction angles
   const dir = new THREE.Vector3();
   camera.getWorldDirection(dir);
   const rx = Math.asin(-dir.y) * (180 / Math.PI);
   const ry = Math.atan2(dir.x, dir.z) * (180 / Math.PI);
   cube.style.transform = `rotateX(${rx}deg) rotateY(${-ry}deg)`;
+
+  // Rotate axis lines to match camera
+  const cx = 32, cy = 32, len = 38;
+  const cosY = Math.cos(-ry * Math.PI / 180);
+  const sinY = Math.sin(-ry * Math.PI / 180);
+  const cosX = Math.cos(rx * Math.PI / 180);
+
+  // X axis
+  const xx = cx + len * cosY, xy = cy + len * sinY * cosX * 0.5;
+  document.getElementById('ax-line-x')?.setAttribute('x2', xx);
+  document.getElementById('ax-line-x')?.setAttribute('y2', xy);
+  document.getElementById('ax-label-x')?.setAttribute('x', xx + 4);
+  document.getElementById('ax-label-x')?.setAttribute('y', xy + 4);
+
+  // Y axis (up)
+  const yx = cx, yy = cy - len * cosX;
+  document.getElementById('ax-line-y')?.setAttribute('x2', yx);
+  document.getElementById('ax-line-y')?.setAttribute('y2', yy);
+  document.getElementById('ax-label-y')?.setAttribute('x', yx - 4);
+  document.getElementById('ax-label-y')?.setAttribute('y', yy - 4);
+
+  // Z axis
+  const zx = cx - len * sinY, zy = cy + len * cosY * cosX * 0.5;
+  document.getElementById('ax-line-z')?.setAttribute('x2', zx);
+  document.getElementById('ax-line-z')?.setAttribute('y2', zy);
+  document.getElementById('ax-label-z')?.setAttribute('x', zx - 10);
+  document.getElementById('ax-label-z')?.setAttribute('y', zy + 4);
 }
 
 // ─── Wireframe Toggle ───
