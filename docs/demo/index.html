@@ -741,13 +741,14 @@
   </div>
 
   <!-- Left Navigation Button + Dropdown -->
-  <div id="left-nav-btn" style="position:fixed;left:14px;top:140px;z-index:50;cursor:pointer;">
-    <div class="nav-item" id="nav-toggle" style="color:#FFD100;border-color:rgba(255,209,0,0.15);background:rgba(0,0,0,0.4);min-width:auto;padding:8px 16px;">
-      <div class="nav-dot" style="background:#FFD100;width:8px;height:8px;"></div>
-      <div class="nav-label" style="font-size:0.7rem;color:rgba(255,255,255,0.6);font-weight:600;">Views</div>
+  <div id="left-nav-btn" style="position:fixed;left:14px;top:125px;z-index:50;cursor:pointer;">
+    <div class="nav-item" id="nav-toggle" style="color:#FFD100;border-color:rgba(255,209,0,0.2);background:rgba(0,0,0,0.5);min-width:auto;padding:10px 16px;gap:10px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD100" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <div class="nav-label" style="font-size:0.8rem;color:rgba(255,255,255,0.7);font-weight:600;">Views</div>
+      <svg id="nav-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round" style="transition:transform 0.3s;"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
   </div>
-  <nav id="left-nav" style="display:none;position:fixed;left:14px;top:178px;z-index:50;">
+  <nav id="left-nav" style="display:flex;position:fixed;left:14px;top:170px;z-index:50;">
     <div class="nav-items" id="nav-items"></div>
   </nav>
 
@@ -783,35 +784,31 @@
     </select>
   </div>
 
-  <!-- ViewCube with axis lines (Fusion 360 style) -->
-  <div id="viewcube" style="position:fixed;top:100px;right:10px;z-index:55;width:110px;height:110px;">
-    <!-- Home button -->
-    <div id="vc-home" style="position:absolute;top:0;left:32px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.4);transition:color 0.2s;z-index:2;" title="Home View">&#8962;</div>
-    <!-- Cube container -->
-    <div style="position:absolute;top:16px;left:18px;width:65px;height:65px;perspective:160px;cursor:pointer;">
-      <div id="cube3d" style="width:65px;height:65px;position:relative;transform-style:preserve-3d;transform:rotateX(-25deg) rotateY(45deg);transition:transform 0.4s ease;">
-        <div class="cface" data-view="front" style="width:65px;height:65px;transform:rotateY(0deg) translateZ(32.5px);">FRONT</div>
-        <div class="cface" data-view="back" style="width:65px;height:65px;transform:rotateY(180deg) translateZ(32.5px);">BACK</div>
-        <div class="cface" data-view="right" style="width:65px;height:65px;transform:rotateY(90deg) translateZ(32.5px);">RIGHT</div>
-        <div class="cface" data-view="left" style="width:65px;height:65px;transform:rotateY(-90deg) translateZ(32.5px);">LEFT</div>
-        <div class="cface" data-view="top" style="width:65px;height:65px;transform:rotateX(90deg) translateZ(32.5px);">TOP</div>
-        <div class="cface" data-view="bottom" style="width:65px;height:65px;transform:rotateX(-90deg) translateZ(32.5px);">BTM</div>
+  <!-- Home button (separate, above ViewCube) -->
+  <div id="vc-home" style="position:fixed;top:97px;right:52px;cursor:pointer;z-index:56;width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:4px;transition:all 0.2s;" title="Home View">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  </div>
+
+  <!-- ViewCube with axis lines -->
+  <div id="viewcube" style="position:fixed;top:125px;right:16px;z-index:55;width:90px;height:90px;cursor:grab;">
+    <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:60px;height:60px;perspective:150px;">
+      <div id="cube3d" style="width:60px;height:60px;position:relative;transform-style:preserve-3d;transform:rotateX(-25deg) rotateY(45deg);">
+        <div class="cface" data-view="front" style="width:60px;height:60px;transform:rotateY(0deg) translateZ(30px);">FRONT</div>
+        <div class="cface" data-view="back" style="width:60px;height:60px;transform:rotateY(180deg) translateZ(30px);">BACK</div>
+        <div class="cface" data-view="right" style="width:60px;height:60px;transform:rotateY(90deg) translateZ(30px);">RIGHT</div>
+        <div class="cface" data-view="left" style="width:60px;height:60px;transform:rotateY(-90deg) translateZ(30px);">LEFT</div>
+        <div class="cface" data-view="top" style="width:60px;height:60px;transform:rotateX(90deg) translateZ(30px);">TOP</div>
+        <div class="cface" data-view="bottom" style="width:60px;height:60px;transform:rotateX(-90deg) translateZ(30px);">BTM</div>
       </div>
     </div>
-    <!-- Axis lines + labels (rotate with cube via JS) -->
-    <svg id="vc-axis-svg" style="position:absolute;top:16px;left:18px;width:65px;height:65px;pointer-events:none;overflow:visible;">
-      <!-- X axis (red) -->
-      <line id="ax-line-x" x1="32" y1="32" x2="70" y2="32" stroke="#ff4444" stroke-width="1.5"/>
-      <text id="ax-label-x" x="74" y="36" fill="#ff4444" font-size="10" font-weight="700">X</text>
-      <!-- Y axis (green) -->
-      <line id="ax-line-y" x1="32" y1="32" x2="32" y2="-6" stroke="#44dd44" stroke-width="1.5"/>
-      <text id="ax-label-y" x="28" y="-10" fill="#44dd44" font-size="10" font-weight="700">Y</text>
-      <!-- Z axis (blue) -->
-      <line id="ax-line-z" x1="32" y1="32" x2="0" y2="58" stroke="#4488ff" stroke-width="1.5"/>
-      <text id="ax-label-z" x="-10" y="64" fill="#4488ff" font-size="10" font-weight="700">Z</text>
+    <svg id="vc-axis-svg" style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:60px;height:60px;pointer-events:none;overflow:visible;">
+      <line id="ax-line-x" x1="30" y1="30" x2="65" y2="30" stroke="#ff4444" stroke-width="1.5"/>
+      <text id="ax-label-x" x="68" y="34" fill="#ff4444" font-size="9" font-weight="700">X</text>
+      <line id="ax-line-y" x1="30" y1="30" x2="30" y2="-5" stroke="#44dd44" stroke-width="1.5"/>
+      <text id="ax-label-y" x="26" y="-8" fill="#44dd44" font-size="9" font-weight="700">Y</text>
+      <line id="ax-line-z" x1="30" y1="30" x2="0" y2="52" stroke="#4488ff" stroke-width="1.5"/>
+      <text id="ax-label-z" x="-8" y="58" fill="#4488ff" font-size="9" font-weight="700">Z</text>
     </svg>
-    <!-- Down arrow -->
-    <div style="position:absolute;bottom:0;right:0;font-size:10px;color:rgba(255,255,255,0.25);cursor:pointer;" id="vc-down" title="Bottom View">&#9662;</div>
   </div>
 
   <!-- Product title below nav -->
@@ -984,6 +981,6 @@
       }
     });
   </script>
-  <script type="module" src="./app.js?v=35"></script>
+  <script type="module" src="./app.js?v=36"></script>
 </body>
 </html>

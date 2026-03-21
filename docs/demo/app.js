@@ -211,12 +211,16 @@ window.addEventListener('scroll', updateLeftNav, { passive: true });
 // Navigation toggle — click to show/hide sub-assembly list
 const navToggle = document.getElementById('nav-toggle');
 const leftNavPanel = document.getElementById('left-nav');
+const navChevron = document.getElementById('nav-chevron');
 if (navToggle) {
   navToggle.addEventListener('click', () => {
     const isOpen = leftNavPanel.style.display === 'flex';
     leftNavPanel.style.display = isOpen ? 'none' : 'flex';
-    navToggle.style.borderColor = isOpen ? 'rgba(255,209,0,0.15)' : 'rgba(255,209,0,0.5)';
+    navToggle.style.borderColor = isOpen ? 'rgba(255,209,0,0.2)' : 'rgba(255,209,0,0.5)';
+    if (navChevron) navChevron.style.transform = isOpen ? '' : 'rotate(180deg)';
   });
+  // Start with chevron rotated (expanded)
+  if (navChevron) navChevron.style.transform = 'rotate(180deg)';
 }
 // Close nav when clicking the 3D canvas (deferred until renderer exists)
 document.addEventListener('click', (e) => {
@@ -997,6 +1001,32 @@ document.querySelectorAll('.cface').forEach(face => {
   });
 });
 
+// ViewCube drag — rotate camera by dragging the cube
+const vcEl = document.getElementById('viewcube');
+if (vcEl) {
+  let vcDragging = false, vcStartX = 0, vcStartY = 0;
+  vcEl.addEventListener('mousedown', (e) => {
+    if (e.target.classList.contains('cface')) return; // let face clicks work
+    vcDragging = true; vcStartX = e.clientX; vcStartY = e.clientY;
+    vcEl.style.cursor = 'grabbing';
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!vcDragging) return;
+    const dx = (e.clientX - vcStartX) * 0.01;
+    const dy = (e.clientY - vcStartY) * 0.01;
+    // Orbit camera
+    const spherical = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
+    spherical.theta -= dx;
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi + dy));
+    camera.position.copy(new THREE.Vector3().setFromSpherical(spherical).add(controls.target));
+    vcStartX = e.clientX; vcStartY = e.clientY;
+    cameraLocked = true;
+  });
+  document.addEventListener('mouseup', () => {
+    if (vcDragging) { vcDragging = false; vcEl.style.cursor = 'grab'; }
+  });
+}
+
 // Home button on ViewCube
 document.getElementById('vc-home')?.addEventListener('click', () => {
   cameraLocked = false; controls.autoRotate = false;
@@ -1018,7 +1048,7 @@ function updateViewCube() {
   cube.style.transform = `rotateX(${rx}deg) rotateY(${-ry}deg)`;
 
   // Rotate axis lines to match camera
-  const cx = 32, cy = 32, len = 38;
+  const cx = 30, cy = 30, len = 35;
   const cosY = Math.cos(-ry * Math.PI / 180);
   const sinY = Math.sin(-ry * Math.PI / 180);
   const cosX = Math.cos(rx * Math.PI / 180);
