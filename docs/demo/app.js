@@ -209,10 +209,12 @@ if (navToggle) {
     navToggle.style.borderColor = isOpen ? 'rgba(255,209,0,0.15)' : 'rgba(255,209,0,0.5)';
   });
 }
-// Close nav when clicking the 3D canvas
-renderer.domElement.addEventListener('click', () => {
-  if (leftNavPanel) leftNavPanel.style.display = 'none';
-  if (navToggle) navToggle.style.borderColor = 'rgba(255,209,0,0.15)';
+// Close nav when clicking the 3D canvas (deferred until renderer exists)
+document.addEventListener('click', (e) => {
+  if (e.target.tagName === 'CANVAS') {
+    if (leftNavPanel) leftNavPanel.style.display = 'none';
+    if (navToggle) navToggle.style.borderColor = 'rgba(255,209,0,0.15)';
+  }
 });
 
 // Mobile: build top assembly nav + handle selection with info display
