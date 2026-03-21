@@ -499,9 +499,8 @@
     /* ─── 3D View Controls (right side) ─── */
     #view-controls {
       position: fixed;
-      right: 20px;
-      top: 50%;
-      transform: translateY(-50%);
+      right: 14px;
+      top: 270px;
       z-index: 55;
       display: flex;
       flex-direction: column;
@@ -742,13 +741,13 @@
   </div>
 
   <!-- Left Navigation Button + Dropdown -->
-  <div id="left-nav-btn" style="position:fixed;left:14px;top:80px;z-index:50;cursor:pointer;">
+  <div id="left-nav-btn" style="position:fixed;left:14px;top:140px;z-index:50;cursor:pointer;">
     <div class="nav-item" id="nav-toggle" style="color:#FFD100;border-color:rgba(255,209,0,0.15);background:rgba(0,0,0,0.4);min-width:auto;padding:8px 16px;">
       <div class="nav-dot" style="background:#FFD100;width:8px;height:8px;"></div>
       <div class="nav-label" style="font-size:0.7rem;color:rgba(255,255,255,0.6);font-weight:600;">Views</div>
     </div>
   </div>
-  <nav id="left-nav" style="display:none;position:fixed;left:14px;top:115px;z-index:50;">
+  <nav id="left-nav" style="display:none;position:fixed;left:14px;top:178px;z-index:50;">
     <div class="nav-items" id="nav-items"></div>
   </nav>
 
@@ -761,8 +760,14 @@
 
   <!-- Mobile title bar (shows full product name) -->
   <!-- ViewCube (top-right) -->
+  <!-- Collapse/Explode buttons (right side, above ViewCube) -->
+  <div id="ce-buttons" style="position:fixed;right:14px;top:80px;z-index:55;display:flex;flex-direction:column;gap:3px;">
+    <button class="vc-btn" id="btn-collapse" title="Collapse" style="font-size:0.5rem;width:auto;padding:4px 10px;">Collapse</button>
+    <button class="vc-btn" id="btn-explode" title="Explode" style="font-size:0.5rem;width:auto;padding:4px 10px;">Explode</button>
+  </div>
+
   <!-- ViewCube with axis lines (Fusion 360 style) -->
-  <div id="viewcube" style="position:fixed;top:58px;right:10px;z-index:55;width:110px;height:110px;">
+  <div id="viewcube" style="position:fixed;top:140px;right:10px;z-index:55;width:110px;height:110px;">
     <!-- Home button -->
     <div id="vc-home" style="position:absolute;top:0;left:32px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.4);transition:color 0.2s;z-index:2;" title="Home View">&#8962;</div>
     <!-- Cube container -->
@@ -962,6 +967,6 @@
       }
     });
   </script>
-  <script type="module" src="./app.js?v=33"></script>
+  <script type="module" src="./app.js?v=34"></script>
 </body>
 </html>

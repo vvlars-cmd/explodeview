@@ -1118,19 +1118,28 @@ document.getElementById('ctrl-ground').addEventListener('change', (e) => {
   ground.visible = e.target.checked;
 });
 
-// Reflections (ground metalness)
+// Reflections (ground mirror effect)
 document.getElementById('ctrl-reflections').addEventListener('change', (e) => {
-  ground.material.metalness = e.target.checked ? 0.9 : 0.7;
-  ground.material.roughness = e.target.checked ? 0.1 : 0.3;
+  if (e.target.checked) {
+    ground.material.metalness = 0.95;
+    ground.material.roughness = 0.05;
+    ground.material.color.set(0x333333);
+  } else {
+    ground.material.metalness = 0.7;
+    ground.material.roughness = 0.3;
+    ground.material.color.set(0x151a2a);
+  }
+  ground.material.needsUpdate = true;
 });
 
 // Shadows toggle
 document.getElementById('ctrl-shadows').addEventListener('change', (e) => {
-  renderer.shadowMap.enabled = e.target.checked;
   keyLight.castShadow = e.target.checked;
-  // Force material updates
-  for (const mesh of allParts) mesh.material.needsUpdate = true;
-  ground.material.needsUpdate = true;
+  for (const mesh of allParts) {
+    mesh.castShadow = e.target.checked;
+    mesh.receiveShadow = e.target.checked;
+  }
+  ground.receiveShadow = e.target.checked;
 });
 
 // Edge display (wireframe overlay)
@@ -1139,7 +1148,7 @@ document.getElementById('ctrl-edges').addEventListener('change', (e) => {
     if (e.target.checked) {
       if (!mesh.userData._edgeLine) {
         const edges = new THREE.EdgesGeometry(mesh.geometry, 15);
-        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 }));
+        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.4 }));
         mesh.add(line);
         mesh.userData._edgeLine = line;
       }
