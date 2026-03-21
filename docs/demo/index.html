@@ -641,85 +641,36 @@
 
     /* ─── Mobile Responsive ─── */
     @media (max-width: 768px) {
-      /* Left nav: hidden by default, toggled by button */
-      #left-nav {
-        display: none;
-        position: fixed;
-        left: 10px; bottom: 95px;
-        top: auto;
-        transform: none;
-        max-height: 50vh;
-        overflow-y: auto;
-        z-index: 54;
-      }
-      #left-nav.mob-show { display: flex; }
-      .nav-item { min-width: 120px; padding: 6px 8px; }
-      .nav-label { font-size: 0.45rem; }
+      /* HIDE everything that overlaps the 3D model */
+      #left-nav { display: none !important; }
+      #bottom-controls { display: none !important; }
+      #scroll-driver { display: none !important; }
+      body { overflow: hidden !important; }
 
-      /* Right controls: move into top nav on mobile */
-      #view-controls {
-        position: static;
-        transform: none;
-        flex-direction: row;
-        padding: 0;
-        gap: 2px;
-        background: none;
-        backdrop-filter: none;
-        border: none;
-        border-radius: 0;
-      }
-      .vc-btn { width: 26px; height: 26px; font-size: 0.7rem; border-radius: 4px; }
-      .vc-divider { width: 1px; height: 18px; margin: 0 1px; }
-
-      /* Show mobile title and toggle buttons */
-      #mob-title { display: block !important; }
-      .mob-toggle { display: flex; }
-
-      /* Hide sound button on mobile */
-      #sound-btn { display: none; }
-
-      /* Show assembly nav in top bar */
-      .top-sep { display: inline; }
-      .top-assemblies { display: flex; }
-
-      /* Show mobile assembly info when active */
-      #mob-asm-info.show { display: block; }
-
-      /* Hide desktop top links (Collapse/Explode) — use +/- instead */
-      #btn-collapse, #btn-explode { display: none; }
-
-      /* Compact top nav — scrollable on mobile */
-      #top-nav { height: 38px; padding: 0 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-      .top-logo { font-size: 0.55rem; letter-spacing: 0.08em; max-width: 120px; }
-      .logo-brand { display: none; }
-      .top-logo span:first-child { display: none; }
+      /* Top nav: compact, scrollable */
+      #top-nav { height: 38px !important; padding: 0 6px !important; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .top-logo { font-size: 0.55rem !important; letter-spacing: 0.08em; max-width: 90px; overflow: hidden; text-overflow: ellipsis; }
       .top-links { gap: 2px; flex-shrink: 0; }
-      .top-link { padding: 3px 6px; font-size: 0.45rem; letter-spacing: 0.06em; white-space: nowrap; }
+      .top-link { padding: 3px 6px; font-size: 0.45rem; white-space: nowrap; }
+      #btn-collapse, #btn-explode { display: none !important; }
 
-      /* Hide bottom controls and scroll-driven text on mobile */
-      #bottom-controls { display: none; }
-      #scroll-driver { display: none; }
-      body { overflow: hidden; }
+      /* Show mobile-only elements */
+      #mob-title { display: block !important; }
+      .mob-toggle { display: flex !important; }
+      .top-sep { display: inline !important; }
+      .top-assemblies { display: flex !important; }
+      #mob-asm-info.show { display: block !important; }
+      #sound-btn { display: none !important; }
 
-      /* Assembly text smaller */
-      .assembly-text { padding: 0 0 4vh 16px; max-width: 50vw; }
-      .assembly-name { font-size: 1.5rem; }
-      .assembly-subtitle { font-size: 0.75rem; }
-      .assembly-detail { display: none; }
-
-      /* Hero smaller */
-      .hero h1 { font-size: 2rem; }
-      .hero .model-name { font-size: 0.9rem; }
-      .hero .tagline { font-size: 0.75rem; max-width: 80vw; }
-
-      /* Finale */
-      .finale h2 { font-size: 1.8rem; }
-      .finale .specs { gap: 1.5rem; padding: 1rem 1.5rem; }
-      .spec-value { font-size: 1.5rem; }
-
-      /* Scroll sections shorter on mobile */
-      .assembly-section { height: 150vh; }
-      .spacer { height: 60vh; }
+      /* Right controls: inline in top nav */
+      #view-controls {
+        position: static !important; transform: none !important;
+        flex-direction: row !important; padding: 0 !important; gap: 2px !important;
+        background: none !important; backdrop-filter: none !important;
+        border: none !important; border-radius: 0 !important;
+      }
+      .vc-btn { width: 26px !important; height: 26px !important; font-size: 0.7rem !important; }
+      .vc-divider { width: 1px !important; height: 18px !important; margin: 0 1px !important; }
     }
 
     /* ─── Animations ─── */
