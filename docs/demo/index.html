@@ -532,15 +532,9 @@
 
     /* ─── Left Navigation ─── */
     #left-nav {
-      position: fixed;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 50;
-      display: flex;
+      display: none;
       flex-direction: column;
       gap: 0;
-      opacity: 1;
     .nav-line { display: none; }
     .nav-items {
       display: flex;
@@ -733,9 +727,14 @@
     </section>
   </div>
 
-  <!-- Left Navigation (Apple-style) -->
-  <nav id="left-nav">
-    <div class="nav-line"></div>
+  <!-- Left Navigation Button + Dropdown -->
+  <div id="left-nav-btn" style="position:fixed;left:14px;top:80px;z-index:50;cursor:pointer;">
+    <div class="nav-item" id="nav-toggle" style="color:#FFD100;border-color:rgba(255,209,0,0.15);background:rgba(0,0,0,0.4);min-width:auto;padding:8px 16px;">
+      <div class="nav-dot" style="background:#FFD100;width:8px;height:8px;"></div>
+      <div class="nav-label" style="font-size:0.7rem;color:rgba(255,255,255,0.6);font-weight:600;">Navigation</div>
+    </div>
+  </div>
+  <nav id="left-nav" style="display:none;position:fixed;left:14px;top:115px;z-index:50;">
     <div class="nav-items" id="nav-items"></div>
   </nav>
 
@@ -746,8 +745,6 @@
       <a href="#" class="top-link active" id="btn-overview">Home</a>
       <a href="#" class="top-link" id="btn-collapse">Collapse</a>
       <a href="#" class="top-link" id="btn-explode">Explode</a>
-      <span class="top-sep">|</span>
-      <div class="top-assemblies" id="top-assemblies"></div>
     </nav>
     <div class="top-actions" id="top-actions"></div>
   </header>
@@ -869,6 +866,6 @@
       }
     });
   </script>
-  <script type="module" src="./app.js?v=20"></script>
+  <script type="module" src="./app.js?v=21"></script>
 </body>
 </html>

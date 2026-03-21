@@ -110,8 +110,24 @@ const ASSEMBLIES = [
 const sectionsContainer = document.getElementById('assembly-sections');
 const navItems = document.getElementById('nav-items');
 
+// Add Home item to nav
+const homeItem = document.createElement('div');
+homeItem.className = 'nav-item';
+homeItem.style.color = '#FFD100';
+homeItem.style.borderColor = 'rgba(255,209,0,0.15)';
+homeItem.innerHTML = `<div class="nav-dot" style="background:#FFD100"></div><div class="nav-label" style="font-weight:600;">HOME</div>`;
+homeItem.addEventListener('click', () => {
+  activeAssembly = -1; targetDim = 0; targetExplode = 0; explodeLevel = 0;
+  manualMode = false; cameraLocked = false; window._isoMovedFor = null;
+  controls.autoRotate = false;
+  camera.position.set(3000, 1800, 3000); controls.target.set(0, 0, 0);
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  homeItem.classList.add('active');
+  leftNavPanel.style.display = 'none';
+});
+navItems.appendChild(homeItem);
+
 ASSEMBLIES.forEach((asm, i) => {
-  // Assembly scroll section
   const section = document.createElement('section');
   section.className = 'assembly-section';
   section.dataset.assembly = i;
@@ -126,17 +142,24 @@ ASSEMBLIES.forEach((asm, i) => {
   `;
   sectionsContainer.appendChild(section);
 
-  // Left nav item with assembly color
+  const partCount = asm.indices[1] - asm.indices[0];
   const navItem = document.createElement('div');
   navItem.className = 'nav-item';
   navItem.dataset.navIndex = i;
   navItem.style.color = asm.color;
   navItem.innerHTML = `
     <div class="nav-dot" style="background:${asm.color}"></div>
-    <div class="nav-label">${asm.name}</div>
+    <div style="flex:1"><div class="nav-label">${asm.name}</div><div style="font-size:0.5rem;color:rgba(255,255,255,0.25);margin-top:2px;">${partCount} parts</div></div>
   `;
   navItem.addEventListener('click', () => {
-    section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Trigger 3D assembly selection
+    activeAssembly = i; targetExplode = 1; targetDim = 1;
+    if (explodeLevel < 0.5) explodeLevel = 1;
+    manualMode = true; cameraLocked = false; window._isoMovedFor = null;
+    highlightColor.copy(asmData[i]?.colorObj || new THREE.Color(asm.color));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    navItem.classList.add('active');
+    leftNavPanel.style.display = 'none';
   });
   navItems.appendChild(navItem);
 });
@@ -175,6 +198,22 @@ function updateLeftNav() {
 }
 
 window.addEventListener('scroll', updateLeftNav, { passive: true });
+
+// Navigation toggle — click to show/hide sub-assembly list
+const navToggle = document.getElementById('nav-toggle');
+const leftNavPanel = document.getElementById('left-nav');
+if (navToggle) {
+  navToggle.addEventListener('click', () => {
+    const isOpen = leftNavPanel.style.display === 'flex';
+    leftNavPanel.style.display = isOpen ? 'none' : 'flex';
+    navToggle.style.borderColor = isOpen ? 'rgba(255,209,0,0.15)' : 'rgba(255,209,0,0.5)';
+  });
+}
+// Close nav when clicking the 3D canvas
+renderer.domElement.addEventListener('click', () => {
+  if (leftNavPanel) leftNavPanel.style.display = 'none';
+  if (navToggle) navToggle.style.borderColor = 'rgba(255,209,0,0.15)';
+});
 
 // Mobile: build top assembly nav + handle selection with info display
 const topAsms = document.getElementById('top-assemblies');
