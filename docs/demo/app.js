@@ -168,6 +168,40 @@ function updateLeftNav() {
 
 window.addEventListener('scroll', updateLeftNav, { passive: true });
 
+// Mobile: build top assembly nav + handle selection with info display
+const topAsms = document.getElementById('top-assemblies');
+const mobAsmInfo = document.getElementById('mob-asm-info');
+const mobAsmName = document.getElementById('mob-asm-name');
+const mobAsmSub = document.getElementById('mob-asm-sub');
+
+if (topAsms) {
+  ASSEMBLIES.forEach((asm, i) => {
+    const link = document.createElement('a');
+    link.className = 'top-asm';
+    link.textContent = asm.name;
+    link.style.color = asm.color;
+    link.dataset.asmIndex = i;
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Toggle selection
+      const wasActive = link.classList.contains('active');
+      topAsms.querySelectorAll('.top-asm').forEach(a => a.classList.remove('active'));
+
+      if (wasActive) {
+        // Deselect
+        mobAsmInfo?.classList.remove('show');
+      } else {
+        // Select this assembly
+        link.classList.add('active');
+        if (mobAsmName) { mobAsmName.textContent = asm.name; mobAsmName.style.color = asm.color; }
+        if (mobAsmSub) mobAsmSub.textContent = asm.subtitle;
+        mobAsmInfo?.classList.add('show');
+      }
+    });
+    topAsms.appendChild(link);
+  });
+}
+
 // ─────────────────────────────────────────────
 //  THREE.JS SCENE
 // ─────────────────────────────────────────────

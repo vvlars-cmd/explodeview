@@ -397,6 +397,31 @@
       cursor: pointer;
     }
     .top-link:hover, .top-link.active { color: white; }
+    .top-sep { display: none; }
+    .top-assemblies { display: none; }
+
+    /* Mobile assembly info — shown when sub-assembly selected */
+    #mob-asm-info {
+      display: none;
+      position: fixed;
+      left: 12px; bottom: 12px;
+      z-index: 55;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 12px 16px;
+      max-width: 220px;
+      pointer-events: none;
+    }
+    .top-asm {
+      font-size: 0.55rem; letter-spacing: 0.06em; color: rgba(255,255,255,0.3);
+      text-decoration: none; text-transform: uppercase; cursor: pointer;
+      padding: 4px 8px; border-radius: 3px; white-space: nowrap;
+      transition: all 0.3s; border: 1px solid transparent;
+    }
+    .top-asm:hover { color: rgba(255,255,255,0.6); }
+    .top-asm.active { color: white; border-color: currentColor; background: rgba(255,255,255,0.05); }
     .top-actions {
       display: flex;
       align-items: center;
@@ -631,20 +656,37 @@
       .nav-item { min-width: 120px; padding: 6px 8px; }
       .nav-label { font-size: 0.45rem; }
 
-      /* Right controls: hidden by default, toggled by button */
+      /* Right controls: move into top nav on mobile */
       #view-controls {
-        display: none;
-        position: fixed;
-        right: 10px; bottom: 95px;
-        top: auto;
+        position: static;
         transform: none;
-        z-index: 54;
+        flex-direction: row;
+        padding: 0;
+        gap: 2px;
+        background: none;
+        backdrop-filter: none;
+        border: none;
+        border-radius: 0;
       }
-      #view-controls.mob-show { display: flex; }
-      .vc-btn { width: 30px; height: 30px; font-size: 0.8rem; }
+      .vc-btn { width: 26px; height: 26px; font-size: 0.7rem; border-radius: 4px; }
+      .vc-divider { width: 1px; height: 18px; margin: 0 1px; }
 
-      /* Show toggle buttons on mobile */
+      /* Show mobile title and toggle buttons */
+      #mob-title { display: block !important; }
       .mob-toggle { display: flex; }
+
+      /* Hide sound button on mobile */
+      #sound-btn { display: none; }
+
+      /* Show assembly nav in top bar */
+      .top-sep { display: inline; }
+      .top-assemblies { display: flex; }
+
+      /* Show mobile assembly info when active */
+      #mob-asm-info.show { display: block; }
+
+      /* Hide desktop top links (Collapse/Explode) — use +/- instead */
+      #btn-collapse, #btn-explode { display: none; }
 
       /* Compact top nav — scrollable on mobile */
       #top-nav { height: 38px; padding: 0 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -756,14 +798,19 @@
   <header id="top-nav">
     <div class="top-logo" id="top-logo">cycleWASH <span>Station Basic</span></div>
     <nav class="top-links">
-      <a href="#" class="top-link active" id="btn-overview">Overview</a>
+      <a href="#" class="top-link active" id="btn-overview">Home</a>
       <a href="#" class="top-link" id="btn-collapse">Collapse</a>
       <a href="#" class="top-link" id="btn-explode">Explode</a>
+      <span class="top-sep">|</span>
+      <div class="top-assemblies" id="top-assemblies"></div>
     </nav>
-    <div class="top-actions">
+    <div class="top-actions" id="top-actions">
       <button id="sound-btn" title="Toggle sound">&#9834;</button>
     </div>
   </header>
+
+  <!-- Mobile title bar (shows product name centered) -->
+  <div id="mob-title" style="display:none;position:fixed;top:38px;left:0;right:0;text-align:center;z-index:59;padding:6px 0;font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);font-weight:500;background:rgba(0,0,0,0.3);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,0.04);">STATION BASIC</div>
 
   <!-- Bottom Controls -->
   <div id="bottom-controls">
@@ -787,14 +834,33 @@
     <button class="vc-btn" id="btn-reset-view" title="Reset View">&#8634;</button>
   </div>
 
-  <!-- Mobile toggle buttons -->
+  <!-- Mobile toggle buttons (hidden on desktop) -->
   <button class="mob-toggle" id="mob-parts" title="Sub-assemblies">☰</button>
   <button class="mob-toggle" id="mob-tools" title="Controls">⚙</button>
+
+  <!-- Mobile assembly info (shown when sub-assembly selected) -->
+  <div id="mob-asm-info">
+    <div id="mob-asm-name" style="font-size:1rem;font-weight:700;letter-spacing:0.02em;"></div>
+    <div id="mob-asm-sub" style="font-size:0.6rem;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.5;"></div>
+  </div>
 
   <script type="importmap">
   {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
   </script>
   <script>
+    // Mobile: move view-controls into top nav, set title, build assembly nav
+    if (window.innerWidth <= 768) {
+      const vc = document.getElementById('view-controls');
+      const ta = document.getElementById('top-actions');
+      if (vc && ta) ta.parentNode.insertBefore(vc, ta);
+
+      // Set mobile title from config or fallback
+      const mt = document.getElementById('mob-title');
+      if (mt && window.EXPLODEVIEW_CONFIG) {
+        mt.textContent = window.EXPLODEVIEW_CONFIG.productName || 'Station Basic';
+      }
+    }
+
     // Mobile toggle buttons — show/hide panels
     document.getElementById('mob-parts').addEventListener('click', function() {
       const nav = document.getElementById('left-nav');
