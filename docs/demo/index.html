@@ -654,8 +654,10 @@
       .top-links { gap: 2px; flex-shrink: 0; }
       .top-link { padding: 3px 6px; font-size: 0.45rem; letter-spacing: 0.06em; white-space: nowrap; }
 
-      /* Hide bottom controls on mobile — use toggle buttons instead */
+      /* Hide bottom controls and scroll-driven text on mobile */
       #bottom-controls { display: none; }
+      #scroll-driver { display: none; }
+      body { overflow: hidden; }
 
       /* Assembly text smaller */
       .assembly-text { padding: 0 0 4vh 16px; max-width: 50vw; }
