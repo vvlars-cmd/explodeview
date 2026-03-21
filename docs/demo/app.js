@@ -1062,5 +1062,8 @@ document.addEventListener('click', (e) => {
 });
 
 // ─── Start ───
-loadModel();
 animate();
+loadModel().catch(err => {
+  console.error('Load failed:', err);
+  document.getElementById('progress-text').textContent = 'Error: ' + err.message;
+});
