@@ -1083,6 +1083,11 @@ const gradientColors = {
   'gradient-forest': [0x134e5e, 0x71b280],
   'gradient-studio': [0x3a3a3a, 0x1a1a1a],
   'gradient-warm': [0xffd89b, 0x19547b],
+  'gradient-ocean': [0x2193b0, 0x6dd5ed],
+  'gradient-arctic': [0xe6dada, 0x274046],
+  'gradient-dawn': [0xff9a9e, 0xfecfef],
+  'gradient-night': [0x0f0c29, 0x24243e],
+  'gradient-desert': [0xc2956e, 0xddd0a8],
 };
 
 function setGradientBackground(topColor, bottomColor) {
