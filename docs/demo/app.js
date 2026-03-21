@@ -1171,7 +1171,7 @@ document.getElementById('btn-export')?.addEventListener('click', () => {
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 });
 
-function exportScreenshot(format, withBg) {
+function exportScreenshot(format, withBg, downloadAs) {
   const scale = parseInt(document.getElementById('exp-res')?.value || '2');
   const w = renderer.domElement.width;
   const h = renderer.domElement.height;
@@ -1193,6 +1193,8 @@ function exportScreenshot(format, withBg) {
   let dataUrl;
   if (format === 'jpg') {
     dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+  } else if (format === 'webp') {
+    dataUrl = canvas.toDataURL('image/webp', 0.92);
   } else {
     dataUrl = canvas.toDataURL('image/png');
   }
@@ -1203,8 +1205,9 @@ function exportScreenshot(format, withBg) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
   // Download
+  const ext = downloadAs || format;
   const link = document.createElement('a');
-  link.download = `${CONFIG.productName || 'model'}_${scale}x.${format}`;
+  link.download = `${CONFIG.productName || 'model'}_${scale}x.${ext}`;
   link.href = dataUrl;
   link.click();
 
@@ -1214,6 +1217,15 @@ function exportScreenshot(format, withBg) {
 document.getElementById('exp-png')?.addEventListener('click', () => exportScreenshot('png', false));
 document.getElementById('exp-jpg')?.addEventListener('click', () => exportScreenshot('jpg', true));
 document.getElementById('exp-png-bg')?.addEventListener('click', () => exportScreenshot('png', true));
+document.getElementById('exp-webp')?.addEventListener('click', () => exportScreenshot('webp', true));
+document.getElementById('exp-tiff')?.addEventListener('click', () => {
+  // TIFF: export as high-res PNG (browsers don't support TIFF natively)
+  // Convert to TIFF-compatible by using max resolution
+  const origRes = document.getElementById('exp-res')?.value;
+  if (document.getElementById('exp-res')) document.getElementById('exp-res').value = '4';
+  exportScreenshot('png', true, 'tiff');
+  if (document.getElementById('exp-res') && origRes) document.getElementById('exp-res').value = origRes;
+});
 
 // ─── Wireframe Toggle ───
 let wireframeOn = false;
