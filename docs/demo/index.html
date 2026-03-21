@@ -534,35 +534,67 @@
       color: rgba(255,255,255,0.6);
     }
 
+    /* ─── Mobile Toggle Buttons ─── */
+    .mob-toggle {
+      display: none;
+      position: fixed;
+      z-index: 55;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #aaa;
+      font-size: 0.9rem;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    .mob-toggle.open { background: rgba(0,85,164,0.3); border-color: rgba(0,85,164,0.5); color: #4da6ff; }
+    #mob-parts { left: 10px; bottom: 55px; }
+    #mob-tools { right: 10px; bottom: 55px; }
+
     /* ─── Mobile Responsive ─── */
     @media (max-width: 768px) {
-      /* Hide left nav on mobile — use top bar instead */
-      #left-nav { display: none; }
+      /* Left nav: hidden by default, toggled by button */
+      #left-nav {
+        display: none;
+        position: fixed;
+        left: 10px; bottom: 95px;
+        top: auto;
+        transform: none;
+        max-height: 50vh;
+        overflow-y: auto;
+        z-index: 54;
+      }
+      #left-nav.mob-show { display: flex; }
+      .nav-item { min-width: 120px; padding: 6px 8px; }
+      .nav-label { font-size: 0.45rem; }
+
+      /* Right controls: hidden by default, toggled by button */
+      #view-controls {
+        display: none;
+        position: fixed;
+        right: 10px; bottom: 95px;
+        top: auto;
+        transform: none;
+        z-index: 54;
+      }
+      #view-controls.mob-show { display: flex; }
+      .vc-btn { width: 30px; height: 30px; font-size: 0.8rem; }
+
+      /* Show toggle buttons on mobile */
+      .mob-toggle { display: flex; }
 
       /* Compact top nav */
-      #top-nav { height: 40px; padding: 0 10px; }
-      .top-logo { font-size: 0.65rem; letter-spacing: 0.15em; }
+      #top-nav { height: 38px; padding: 0 8px; }
+      .top-logo { font-size: 0.6rem; letter-spacing: 0.12em; }
       .top-links { gap: 2px; }
-      .top-link { padding: 4px 8px; font-size: 0.5rem; }
+      .top-link { padding: 3px 6px; font-size: 0.45rem; letter-spacing: 0.06em; }
 
-      /* Move right controls to bottom-right, make smaller */
-      #view-controls {
-        top: auto;
-        bottom: 60px;
-        right: 8px;
-        transform: none;
-        flex-direction: row;
-        padding: 4px;
-        gap: 2px;
-      }
-      .vc-btn { width: 28px; height: 28px; font-size: 0.75rem; }
-      .vc-divider { width: 1px; height: 20px; margin: 0 1px; }
-
-      /* Bottom controls smaller */
-      #bottom-controls { padding: 5px 10px; gap: 8px; bottom: 10px; }
-      .ctrl-btn { width: 28px; height: 28px; font-size: 0.7rem; }
-      .ctrl-progress { width: 120px; }
-      .ctrl-progress-label { font-size: 0.4rem; }
+      /* Hide bottom controls on mobile — use toggle buttons instead */
+      #bottom-controls { display: none; }
 
       /* Assembly text smaller */
       .assembly-text { padding: 0 0 4vh 16px; max-width: 50vw; }
@@ -690,8 +722,40 @@
     <button class="vc-btn" id="btn-reset-view" title="Reset View">&#8634;</button>
   </div>
 
+  <!-- Mobile toggle buttons -->
+  <button class="mob-toggle" id="mob-parts" title="Sub-assemblies">☰</button>
+  <button class="mob-toggle" id="mob-tools" title="Controls">⚙</button>
+
   <script type="importmap">
   {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+  </script>
+  <script>
+    // Mobile toggle buttons — show/hide panels
+    document.getElementById('mob-parts').addEventListener('click', function() {
+      const nav = document.getElementById('left-nav');
+      const tools = document.getElementById('view-controls');
+      nav.classList.toggle('mob-show');
+      tools.classList.remove('mob-show');
+      this.classList.toggle('open');
+      document.getElementById('mob-tools').classList.remove('open');
+    });
+    document.getElementById('mob-tools').addEventListener('click', function() {
+      const tools = document.getElementById('view-controls');
+      const nav = document.getElementById('left-nav');
+      tools.classList.toggle('mob-show');
+      nav.classList.remove('mob-show');
+      this.classList.toggle('open');
+      document.getElementById('mob-parts').classList.remove('open');
+    });
+    // Close panels when tapping the 3D canvas
+    document.addEventListener('touchstart', function(e) {
+      if (!e.target.closest('#left-nav') && !e.target.closest('#view-controls') && !e.target.closest('.mob-toggle')) {
+        document.getElementById('left-nav').classList.remove('mob-show');
+        document.getElementById('view-controls').classList.remove('mob-show');
+        document.getElementById('mob-parts').classList.remove('open');
+        document.getElementById('mob-tools').classList.remove('open');
+      }
+    });
   </script>
   <script type="module" src="./app.js"></script>
 </body>
