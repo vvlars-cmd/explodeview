@@ -44,6 +44,10 @@ const CONFIG = window.EXPLODEVIEW_CONFIG || {
   // Finale
   const finaleTitle = document.querySelector('.finale h2');
   if (finaleTitle) finaleTitle.innerHTML = `${CONFIG.brand} <span>${CONFIG.productName}</span>`;
+
+  // Product title bar
+  const prodTitle = document.getElementById('product-title');
+  if (prodTitle) prodTitle.innerHTML = `<span style="font-weight:200">${CONFIG.brand}</span> <span style="font-weight:700;color:#FFD100">${CONFIG.productName}</span>`;
 })();
 
 // ─────────────────────────────────────────────
@@ -187,19 +191,34 @@ if (topAsms) {
     link.dataset.asmIndex = i;
     link.addEventListener('click', (e) => {
       e.preventDefault();
-      // Toggle selection
       const wasActive = link.classList.contains('active');
       topAsms.querySelectorAll('.top-asm').forEach(a => a.classList.remove('active'));
 
       if (wasActive) {
-        // Deselect
+        // Deselect — go back to overview
+        activeAssembly = -1;
+        targetDim = 0;
+        window._isoMovedFor = null;
         mobAsmInfo?.classList.remove('show');
+        // Also update left nav
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       } else {
-        // Select this assembly
+        // Select this assembly — trigger 3D highlighting
         link.classList.add('active');
+        activeAssembly = i;
+        targetExplode = 1;
+        targetDim = 1;
+        if (explodeLevel < 0.5) explodeLevel = 1;
+        manualMode = true;
+        cameraLocked = false;
+        window._isoMovedFor = null;
+        highlightColor.copy(asmData[i]?.colorObj || new THREE.Color(asm.color));
+        // Update mobile info
         if (mobAsmName) { mobAsmName.textContent = asm.name; mobAsmName.style.color = asm.color; }
         if (mobAsmSub) mobAsmSub.textContent = asm.subtitle;
         mobAsmInfo?.classList.add('show');
+        // Sync left nav
+        document.querySelectorAll('.nav-item').forEach((n, j) => n.classList.toggle('active', j === i));
       }
     });
     topAsms.appendChild(link);
