@@ -999,6 +999,20 @@ document.getElementById('ctrl-ambient').addEventListener('input', (e) => {
   ambientLight.intensity = e.target.value / 100;
 });
 
+// Model scale
+document.getElementById('ctrl-scale').addEventListener('input', (e) => {
+  const s = e.target.value / 100;
+  for (const mesh of allParts) {
+    mesh.scale.setScalar(s);
+  }
+});
+
+// Field of view (perspective)
+document.getElementById('ctrl-fov').addEventListener('input', (e) => {
+  camera.fov = parseInt(e.target.value);
+  camera.updateProjectionMatrix();
+});
+
 // Environment HDR presets (Poly Haven — free CC0)
 const envUrls = {
   'warehouse': 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/empty_warehouse_01_1k.hdr',
